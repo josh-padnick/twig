@@ -1,0 +1,50 @@
+# goreleaser configuration: static binaries for darwin/linux on amd64/arm64,
+# GitHub release with checksums, and a Homebrew cask pushed to
+# josh-padnick/homebrew-tap. The cask's postflight strips the quarantine
+# attribute because the binaries are unsigned.
+version: 2
+
+project_name: twig
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - main: .
+    binary: twig
+    env:
+      - CGO_ENABLED=0
+    goos: [darwin, linux]
+    goarch: [amd64, arm64]
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}}
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+archives:
+  - formats: [tar.gz]
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+
+checksum:
+  name_template: checksums.txt
+
+changelog:
+  use: github
+
+homebrew_casks:
+  - name: twig
+    directory: Casks
+    homepage: https://joshpadnick.com/twig/
+    description: Git worktrees, one short command away
+    license: MIT
+    repository:
+      owner: josh-padnick
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    commit_msg_template: "Cask update for {{ .ProjectName }} version {{ .Tag }}"
+    hooks:
+      post:
+        install: |
+          if system_command("/usr/bin/xattr", args: ["-h"]).exit_status == 0
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/twig"]
+          end

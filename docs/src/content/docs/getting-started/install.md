@@ -3,10 +3,10 @@ title: Install
 description: Install twig with Homebrew or go install.
 ---
 
-## Homebrew (macOS, Linux)
+## Homebrew (macOS)
 
 ```sh
-brew install josh-padnick/tap/twig
+brew install --cask josh-padnick/tap/twig
 ```
 
 ## go install
