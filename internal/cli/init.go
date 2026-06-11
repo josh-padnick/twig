@@ -53,14 +53,23 @@ func runInitWizard(force bool) error {
 		return err
 	}
 
-	ui.Infof("twig init — let's find your worktrees.\n")
+	ui.Infof("twig init: let's find your worktrees.\n")
 
-	roots, err := chooseRoots(home)
+	chosen, err := chooseRoots(home)
 	if err != nil {
 		return err
 	}
+	roots := make([]string, 0, len(chosen))
+	for _, c := range chosen {
+		roots = append(roots, c.Path)
+	}
+	if len(roots) == 0 {
+		ui.Infof("No roots selected: twig will still resolve inside any repo you're in.")
+	} else {
+		ui.Infof("Roots to scan: %s", displayPaths(home, roots))
+	}
 
-	ui.Infof("Providers active automatically when present: conductor (~/conductor/workspaces), claude-code.")
+	reportDetectedTools(home, chosen)
 
 	editors := chooseEditors()
 
@@ -89,8 +98,9 @@ func runInitWizard(force bool) error {
 }
 
 // chooseRoots discovers candidates and multi-selects, falling back to a
-// typed path when nothing was found.
-func chooseRoots(home string) ([]string, error) {
+// typed path when nothing was found. Roots holding Claude worktrees are
+// preselected, so Enter alone picks the likeliest answer.
+func chooseRoots(home string) ([]initwiz.RootCandidate, error) {
 	cands := initwiz.Discover(home)
 	if len(cands) == 0 {
 		line, err := ui.ReadLine("No project roots detected. Enter one to scan (empty to skip): ")
@@ -103,32 +113,54 @@ func chooseRoots(home string) ([]string, error) {
 		if fi, err := os.Stat(line); err != nil || !fi.IsDir() {
 			return nil, fmt.Errorf("not a directory: %s", line)
 		}
-		return []string{line}, nil
+		return []initwiz.RootCandidate{{Path: line}}, nil
 	}
 
-	ui.Infof("Select the roots twig should scan (TAB toggles, Enter confirms):")
-	chosen, err := pick.ManyOf(cands, func(c initwiz.RootCandidate) string {
-		label := fmt.Sprintf("%s — %d repo(s)", displayPath(home, c.Path), c.RepoCount)
-		if c.ClaudeCount > 0 {
-			label += fmt.Sprintf(", %d with Claude worktrees", c.ClaudeCount)
-		}
-		return label
-	})
-	if err != nil {
-		return nil, err
+	return pick.ManyOf(cands,
+		func(c initwiz.RootCandidate) string {
+			label := fmt.Sprintf("%s (%d repos", displayPath(home, c.Path), c.RepoCount)
+			if c.ClaudeCount > 0 {
+				label += fmt.Sprintf(", %d with Claude Code worktrees", c.ClaudeCount)
+			}
+			return label + ")"
+		},
+		"Which folders should twig search for worktrees? TAB selects, Enter confirms.",
+		func(c initwiz.RootCandidate) bool { return c.ClaudeCount > 0 },
+	)
+}
+
+// reportDetectedTools tells the user, concretely, which worktree-creating
+// tools twig found and what that means. Silent when nothing was detected.
+func reportDetectedTools(home string, chosen []initwiz.RootCandidate) {
+	var lines []string
+	if initwiz.HasConductor(home) {
+		lines = append(lines, fmt.Sprintf("  Conductor: workspaces in %s will be found automatically",
+			displayPath(home, filepath.Join(home, "conductor", "workspaces"))))
 	}
-	var roots []string
+	var claudeRoots []string
 	for _, c := range chosen {
-		roots = append(roots, c.Path)
+		if c.ClaudeCount > 0 {
+			claudeRoots = append(claudeRoots, c.Path)
+		}
 	}
-	return roots, nil
+	if len(claudeRoots) > 0 {
+		lines = append(lines, fmt.Sprintf("  Claude Code: worktrees in repos under %s will be found automatically",
+			displayPaths(home, claudeRoots)))
+	}
+	if len(lines) == 0 {
+		return
+	}
+	ui.Infof("\nDetected tools that create worktrees:")
+	for _, line := range lines {
+		ui.Infof("%s", line)
+	}
 }
 
 // chooseEditors asks per detected editor; declining everything is fine.
 func chooseEditors() []initwiz.Editor {
 	var chosen []initwiz.Editor
 	for _, e := range initwiz.DetectEditors() {
-		yes, err := ui.ConfirmYN(fmt.Sprintf("Also open %s when entering a worktree?", e.Name), false)
+		yes, err := ui.ConfirmYN(fmt.Sprintf("Should I open %s when entering a worktree?", e.DisplayName), false)
 		if err == nil && yes {
 			chosen = append(chosen, e)
 		}
@@ -136,12 +168,16 @@ func chooseEditors() []initwiz.Editor {
 	return chosen
 }
 
-// offerShellInit detects the shell and offers to append the eval line.
+// offerShellInit explains what the tw function buys, then offers to
+// append the eval line.
 func offerShellInit(home string) {
 	rc, ok := initwiz.DetectShellRC(home)
 	if !ok {
 		return
 	}
+	ui.Infof("\ntwig can add a small `tw` function to your shell. It lets you jump")
+	ui.Infof("to a worktree inside the current terminal instead of opening a new")
+	ui.Infof("window: `tw gould` cd's this shell there and runs setup.")
 	yes, err := ui.ConfirmYN(fmt.Sprintf("Add the tw shell function to %s?", displayPath(home, rc.Path)), false)
 	if err != nil || !yes {
 		ui.Infof("To enable in-place cd later, add:  %s", rc.Line)
@@ -164,4 +200,13 @@ func displayPath(home, p string) string {
 		return "~" + string(os.PathSeparator) + rel
 	}
 	return p
+}
+
+// displayPaths renders several paths for prompts, ~-shortened.
+func displayPaths(home string, paths []string) string {
+	out := make([]string, len(paths))
+	for i, p := range paths {
+		out[i] = displayPath(home, p)
+	}
+	return strings.Join(out, ", ")
 }

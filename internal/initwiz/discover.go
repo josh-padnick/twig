@@ -107,8 +107,9 @@ func childDirs(dir string) []string {
 
 // Editor is an installed editor twig can offer as an opener.
 type Editor struct {
-	Name    string // display + opener name
-	Command string // opener command template
+	Name        string // opener key in the generated config (the binary name)
+	DisplayName string // human name for wizard prompts
+	Command     string // opener command template
 }
 
 // DetectEditors finds known editor CLIs on PATH.
@@ -121,8 +122,15 @@ func DetectEditors() []Editor {
 	var out []Editor
 	for _, k := range known {
 		if _, err := exec.LookPath(k.bin); err == nil {
-			out = append(out, Editor{Name: k.bin, Command: k.bin + " {{dir}}"})
+			out = append(out, Editor{Name: k.bin, DisplayName: k.name, Command: k.bin + " {{dir}}"})
 		}
 	}
 	return out
+}
+
+// HasConductor reports whether Conductor's workspace directory exists,
+// for the wizard's detected-tools summary.
+func HasConductor(home string) bool {
+	fi, err := os.Stat(filepath.Join(home, "conductor", "workspaces"))
+	return err == nil && fi.IsDir()
 }

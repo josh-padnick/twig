@@ -65,8 +65,11 @@ func One(cands []resolve.Candidate) (resolve.Candidate, error) {
 }
 
 // ManyOf runs a multi-select fuzzy picker (TAB toggles, Enter confirms;
-// with no toggles the highlighted item is the selection).
-func ManyOf[T any](items []T, display func(T) string) ([]T, error) {
+// with no toggles the highlighted item is the selection). The header
+// renders inside the picker UI — the picker takes over the screen, so any
+// instructions printed beforehand would be invisible while it runs.
+// preselected, when non-nil, marks items as selected up front.
+func ManyOf[T any](items []T, display func(T) string, header string, preselected func(T) bool) ([]T, error) {
 	if len(items) == 0 {
 		return nil, nil
 	}
@@ -77,7 +80,11 @@ func ManyOf[T any](items []T, display func(T) string) ([]T, error) {
 		}
 		return nil, &NoTTYError{Lines: lines}
 	}
-	idxs, err := fuzzyfinder.FindMulti(items, func(i int) string { return display(items[i]) })
+	opts := []fuzzyfinder.Option{fuzzyfinder.WithHeader(header)}
+	if preselected != nil {
+		opts = append(opts, fuzzyfinder.WithPreselected(func(i int) bool { return preselected(items[i]) }))
+	}
+	idxs, err := fuzzyfinder.FindMulti(items, func(i int) string { return display(items[i]) }, opts...)
 	if err != nil {
 		if errors.Is(err, fuzzyfinder.ErrAbort) {
 			return nil, ErrCancelled
