@@ -9,15 +9,26 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/josh-padnick/twig/internal/setup"
 	"github.com/josh-padnick/twig/internal/ui"
 )
 
+// buildVersion is the ldflags version, stamped into setup state markers.
+var buildVersion = "dev"
+
 // Execute runs the root command and returns a process exit code. Errors are
 // printed to stderr here (cobra's own printing is silenced) so no failure
-// path ever writes to stdout.
+// path ever writes to stdout. A child process's exit code (from [run]
+// scripts) passes through unchanged and unannounced — the child already
+// spoke for itself.
 func Execute(version, commit string) int {
+	buildVersion = version
 	root := newRootCmd(version, commit)
 	if err := root.Execute(); err != nil {
+		var exitErr *setup.ExitCodeError
+		if errors.As(err, &exitErr) {
+			return exitErr.Code
+		}
 		if !errors.Is(err, errAlreadyReported) {
 			ui.Errorf("%v", err)
 		}
@@ -52,6 +63,6 @@ func newRootCmd(version, commit string) *cobra.Command {
 			return fmt.Errorf("opening worktrees lands in M4 — until then: cd \"$(twig cd %s)\"", args[0])
 		},
 	}
-	root.AddCommand(newCdCmd(), newListCmd(), newTrustCmd())
+	root.AddCommand(newCdCmd(), newListCmd(), newTrustCmd(), newEnterCmd())
 	return root
 }
