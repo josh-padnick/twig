@@ -8,20 +8,28 @@ created by AI coding tools like Claude Code, Codex, and Conductor.
 
 The main idea: while you're in, say, the Claude Code or Codex UI, you glance
 at the worktree or branch name (`claude/xenodochial-gould-7bf514`) and note
-some memorable part of it (`gould`). One command then does the rest. It
-finds where that directory actually lives on your machine, opens a terminal
-there (or cd's your current shell), and runs the repo's optional setup and
-run commands:
+some memorable part of it (`gould`). One command then does the rest:
 
-```sh
-twig gould
-# → opens Ghostty in ~/Code/fabricahq/app/.claude/worktrees/xenodochial-gould-7bf514,
-#   with the repo's setup script already run
-```
+![Spotting the branch name in a Claude Code session, then opening that worktree locally with twig](../../assets/claude-code-to-twig.png)
 
-twig can also open other tools in that working directory at the same time:
-Cursor, VS Code, a browser tab pointed at your dev server, whatever set of
-openers you configure.
+## How to use it
+
+1. An agent finishes some work. Glance at its branch or worktree name in
+   the agent's UI and keep any memorable part: here, `gould`.
+2. In any terminal, type `twig gould`. twig finds where that worktree
+   lives on disk, opens a terminal there (plus any other
+   [openers](guides/openers.md) you configured, like Cursor or a
+   browser tab on your dev server), and runs the repo's
+   [setup script](guides/setup-scripts.md) if it hasn't run yet.
+3. By default twig opens a new terminal window. To jump there inside the
+   terminal you're already using, run `tw gould` instead; `tw` is the
+   small shell function that
+   [shell integration](guides/shell-integration.md) installs. And
+   `twig gould --run` also starts the repo's declared dev command after
+   setup.
+4. Done with that branch? `twig rm gould` asks for confirmation, calling
+   out any commits you haven't pushed, then removes the worktree and
+   keeps the branch.
 
 ## The problem
 
@@ -39,14 +47,9 @@ about where they belong:
   at all: their work is a branch on GitHub that no checkout on your
   machine has fetched.
 
-So "jump to the worktree where the agent fixed login" becomes
-archaeology: `git worktree list`, squint, copy a 70-character path, `cd`.
-Multiply by every session, every day.
-
-Arriving isn't enough, either. A fresh worktree is a fresh checkout: no
-`node_modules`, no migrations, no env. Each one quietly costs a
-`bun install && goose up` that you either remember, or discover halfway
-into debugging something that was never broken.
+Finding where each of those worktrees lives on your local system is a
+pain. And once you've found one, you still need to run the same setup
+and run commands, over and over, for every fresh checkout.
 
 ## What twig does about it
 
@@ -55,30 +58,30 @@ repo's worktree list first (git already knows every worktree, wherever it
 lives on disk), then scans known tool locations and your configured roots.
 Exact matches beat substrings, branches beat directory names, and real
 ambiguity gets a fuzzy picker. Typing `gould` is enough.
-[How resolution works.](/twig/guides/resolution/)
+[How resolution works.](guides/resolution.md)
 
 Setup runs itself, but only when needed. A `twig.toml` committed at the
 repo root says what a worktree needs (`bun install`, migrations,
 whatever). twig runs it on first entry, then skips it until the manifest
 or a watched lockfile changes. Every entry path converges on the same
 logic, whether you opened a window, cd'd with `tw`, or ran `twig enter`
-by hand. [Setup and run scripts.](/twig/guides/setup-scripts/)
+by hand. [Setup and run scripts.](guides/setup-scripts.md)
 
 Repo-declared code requires consent. Running scripts on "enter" is an
 attack vector: checking out a PR branch must never execute attacker code.
 twig copies direnv here. Nothing from a `twig.toml` runs until you've
 seen it and approved that exact content, and any edit re-trips the gate.
-[The trust model.](/twig/guides/trust/)
+[The trust model.](guides/trust.md)
 
 Entering can open your whole working context, not just a terminal.
 Openers run as a set, so one command can open Ghostty, Cursor, and a
 browser tab on your dev server, with per-repo overrides.
-[Openers.](/twig/guides/openers/)
+[Openers.](guides/openers.md)
 
 Branches that only exist remotely still resolve. With `-r`, a local miss
 falls through to `git ls-remote` across repos you already have; twig
 fetches the branch and builds the worktree for you.
-[Remote pickup.](/twig/guides/remote-pickup/)
+[Remote pickup.](guides/remote-pickup.md)
 
 ## What twig deliberately isn't
 
@@ -92,5 +95,5 @@ fetches the branch and builds the worktree for you.
 
 ## Where to start
 
-[Install twig](/twig/getting-started/install/), run `twig init`, then try
-the [quickstart](/twig/getting-started/quickstart/).
+[Install twig](getting-started/install.md), run `twig init`, then try
+the [quickstart](getting-started/quickstart.md).
