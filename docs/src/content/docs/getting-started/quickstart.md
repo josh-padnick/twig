@@ -9,12 +9,14 @@ description: From zero to opening worktrees by fragment in two minutes.
 twig init
 ```
 
-The wizard scans well-known project locations (`~/Code`, `~/Projects`, …),
-proposes roots ranked by how worktree-shaped they look, detects installed
-editors to offer as openers, and can add the `tw` shell function to your
-shell config. It writes a commented `~/.config/twig/config.toml`. (Skip it
-and twig still works inside any repo and for Conductor workspaces; the
-first interactive miss with no config will offer the wizard too.)
+The wizard scans well-known project locations (`~/Code`, `~/Projects`, and
+the like), proposes roots ranked by how worktree-shaped they look, detects
+installed editors to offer as openers, and can add the `tw` shell function
+to your shell config. It writes a commented `~/.config/twig/config.toml`.
+
+You can also skip it: twig works inside any repo and for Conductor
+workspaces with no config at all, and the first interactive miss with no
+config will offer the wizard anyway.
 
 ## Open a worktree by fragment
 
@@ -32,14 +34,13 @@ literal path. Exact matches win without a picker; ties open a fuzzy finder.
 
 ## cd instead of opening windows
 
-With [shell integration](/twig/getting-started/install/#shell-integration-recommended)
-installed:
+With [shell integration](/twig/guides/shell-integration/) installed:
 
 ```sh
 tw matsumoto            # cd's your current shell into the worktree
 ```
 
-Or script it yourself — `twig cd` prints only the path:
+Or script it yourself, since `twig cd` prints only the path:
 
 ```sh
 cd "$(twig cd matsumoto)"

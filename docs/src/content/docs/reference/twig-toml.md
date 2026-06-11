@@ -1,11 +1,11 @@
 ---
 title: twig.toml
-description: The per-repo manifest reference — setup, run, and opener overrides.
+description: The per-repo manifest reference for setup, run, and opener overrides.
 ---
 
-`twig.toml` is looked up in the worktree root first, then the **main repo
-root** — commit it once at the main root and it governs every worktree.
-Nothing in it takes effect until the manifest is
+`twig.toml` is looked up in the worktree root first, with the main repo
+root as fallback. Commit it once at the main root and it governs every
+worktree. Nothing in it takes effect until the manifest is
 [trusted](/twig/guides/trust/).
 
 ```toml
@@ -52,5 +52,5 @@ command = "open http://localhost:5173"
 - Unknown keys warn (typo protection) but don't block.
 - Setup success is recorded per worktree in its git dir; removing the
   worktree removes the state.
-- Editing this file re-trips the trust gate **and** re-runs setup after
-  re-approval (the manifest hash is part of the skip check).
+- Editing this file re-trips the trust gate and also re-runs setup after
+  re-approval, since the manifest hash is part of the skip check.

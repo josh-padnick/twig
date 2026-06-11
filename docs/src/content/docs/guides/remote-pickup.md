@@ -1,6 +1,6 @@
 ---
 title: Remote branch pickup
-description: Resolve branches that only exist on GitHub — cloud sessions — by fetching them into a local worktree.
+description: Resolve branches that only exist on GitHub by fetching them into a local worktree.
 ---
 
 Cloud sessions (Claude Code web, Codex) leave their work as a branch on
@@ -15,16 +15,17 @@ twig -r fix-login
 
 ## How it works
 
-1. Runs **only after local resolution finds nothing**, and only with `-r`
-   or `auto = true` — typos shouldn't hit the network.
-2. Queries `git ls-remote --heads` against the remotes of repos already on
-   disk: the current repo first, then repos directly under your `roots`.
-   No GitHub API, no tokens — it works with any git host.
+1. Pickup runs only after local resolution finds nothing, and only with
+   `-r` or `auto = true`. Typos shouldn't hit the network.
+2. twig queries `git ls-remote --heads` against the remotes of repos
+   already on disk: the current repo first, then repos directly under
+   your `roots`. There's no GitHub API and no tokens involved, so it
+   works with any git host.
 3. Matches use the same [branch tiers](/twig/guides/resolution/) as local
    resolution; several equal matches open the picker.
 4. After you confirm, twig fetches the branch, creates a tracking worktree
-   at the configured location, and continues the normal open/cd flow —
-   including [setup](/twig/guides/setup-scripts/).
+   at the configured location, and continues the normal open/cd flow,
+   [setup](/twig/guides/setup-scripts/) included.
 
 ## Configuration
 
@@ -37,10 +38,10 @@ dir = ".claude/worktrees/{{slug}}"    # where fetched branches get worktrees,
 ```
 
 `{{slug}}` is the branch's last path segment; `{{branch}}` is the full
-name with `/` → `-`.
+name with `/` replaced by `-`.
 
 ## Out of scope (for now)
 
-twig will not **clone** a repo that isn't on disk at all — that requires
+twig will not clone a repo that isn't on disk at all; that requires
 host-API repo discovery and auth. If the repo exists locally anywhere
 under your roots, pickup finds its branches.

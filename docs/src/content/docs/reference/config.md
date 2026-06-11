@@ -4,10 +4,10 @@ description: The complete user configuration reference.
 ---
 
 twig reads `~/.config/twig/config.toml` (respecting `XDG_CONFIG_HOME`).
-**No config file is required** — every setting has a default, and
-`twig init` generates one interactively. Unknown keys
-and dangling references are warnings (shown by every command and by
-`twig doctor`), never hard failures.
+No config file is required: every setting has a default, and `twig init`
+generates one interactively. Unknown keys and dangling references are
+warnings (shown by every command and by `twig doctor`), never hard
+failures.
 
 ```toml
 # Extra places to scan for worktrees, besides providers and the current

@@ -1,6 +1,6 @@
 ---
 title: Shell integration
-description: The tw function — cd into worktrees in your current shell, with setup applied.
+description: The tw function, which cd's into worktrees in your current shell with setup applied.
 ---
 
 A binary cannot change its parent shell's directory, so twig ships a tiny
@@ -30,10 +30,10 @@ tw() {
 }
 ```
 
-`twig cd` prints **only the path** on stdout — prompts, pickers, and
-errors use the terminal directly — which is what makes the command
-substitution safe. `twig enter` then applies the same trust-gated setup
-as every other arrival path.
+`twig cd` prints only the path on stdout; prompts, pickers, and errors go
+to the terminal directly. That's what makes the command substitution
+safe. `twig enter` then applies the same trust-gated setup as every other
+arrival path.
 
 Supported shells: `zsh`, `bash`, `fish`. Rename the function with
 `--cmd`:
@@ -48,7 +48,7 @@ eval "$(twig shell-init zsh --cmd j)"
 | --- | --- |
 | `twig foo` | new terminal window (plus other openers), setup inside it |
 | `tw foo` | current shell cd's there, setup runs right here |
-| `cd …` by hand, then `twig enter` | same setup logic, fully manual |
+| `cd ...` by hand, then `twig enter` | same setup logic, fully manual |
 
 `setup.auto = false` in config makes all of them skip setup unless you
 pass `--setup`.
