@@ -23,10 +23,14 @@ created by AI coding tools like Claude Code, Codex, and Conductor.
    lives on disk, opens a new terminal window there (plus any other
    openers you configured, like Cursor), and runs the repo's setup script
    if it hasn't run yet.
-3. Prefer to stay in the current shell? `tw gould` cd's you there
-   instead. Want the dev server running too? `twig gould --run`.
-4. Done with that branch? `twig rm gould` removes the worktree and keeps
-   the branch.
+3. By default twig opens a new terminal window. To jump there inside the
+   terminal you're already using, run `tw gould` instead; `tw` is the
+   small shell function that `twig shell-init` installs. And
+   `twig gould --run` also starts the repo's declared dev command after
+   setup.
+4. Done with that branch? `twig rm gould` asks for confirmation, calling
+   out any commits you haven't pushed, then removes the worktree and
+   keeps the branch.
 
 ## Where worktrees hide
 

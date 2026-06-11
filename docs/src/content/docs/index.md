@@ -21,10 +21,15 @@ some memorable part of it (`gould`). One command then does the rest:
    [openers](/twig/guides/openers/) you configured, like Cursor or a
    browser tab on your dev server), and runs the repo's
    [setup script](/twig/guides/setup-scripts/) if it hasn't run yet.
-3. Prefer to stay in the current shell? `tw gould` cd's you there
-   instead. Want the dev server running too? `twig gould --run`.
-4. Done with that branch? `twig rm gould` removes the worktree and keeps
-   the branch.
+3. By default twig opens a new terminal window. To jump there inside the
+   terminal you're already using, run `tw gould` instead; `tw` is the
+   small shell function that
+   [shell integration](/twig/guides/shell-integration/) installs. And
+   `twig gould --run` also starts the repo's declared dev command after
+   setup.
+4. Done with that branch? `twig rm gould` asks for confirmation, calling
+   out any commits you haven't pushed, then removes the worktree and
+   keeps the branch.
 
 ## The problem
 
@@ -42,14 +47,9 @@ about where they belong:
   at all: their work is a branch on GitHub that no checkout on your
   machine has fetched.
 
-So "jump to the worktree where the agent fixed login" becomes
-archaeology: `git worktree list`, squint, copy a 70-character path, `cd`.
-Multiply by every session, every day.
-
-Arriving isn't enough, either. A fresh worktree is a fresh checkout: no
-`node_modules`, no migrations, no env. Each one quietly costs a
-`bun install && goose up` that you either remember, or discover halfway
-into debugging something that was never broken.
+Finding where each of those worktrees lives on your local system is a
+pain. And once you've found one, you still need to run the same setup
+and run commands, over and over, for every fresh checkout.
 
 ## What twig does about it
 
