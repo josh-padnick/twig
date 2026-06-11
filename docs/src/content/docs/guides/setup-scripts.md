@@ -18,17 +18,18 @@ run = "bun dev"
 ```
 
 twig looks for `twig.toml` in the worktree root first, then falls back to
-the **main repo root** — commit it once and it governs every worktree.
+the main repo root. Commit it once at the main root and it governs every
+worktree.
 
 ## When setup runs
 
 Every arrival path (new window, `tw` cd, `twig enter` by hand) converges on
 the same logic:
 
-- **First entry** into a worktree runs `[setup].run`, streaming output.
-- **Re-entry skips it** — unless the manifest changed, or any file listed
-  in `watch` changed (content hashes, so creating or deleting a watched
-  file counts).
+- First entry into a worktree runs `[setup].run`, streaming output.
+- Re-entry skips it, unless the manifest changed or any file listed in
+  `watch` changed. Watch files are content-hashed, so creating or deleting
+  one counts as a change.
 - `--setup` forces a re-run; `--no-setup` skips it.
 - A failing setup aborts with the script's exit status and records
   nothing, so the next entry tries again.
@@ -40,7 +41,7 @@ and never pollutes your working tree.
 ## The [run] script
 
 `twig <fragment> --run` (or `twig enter --run`) starts `[run].run` in the
-foreground after setup succeeds — a dev server, typically. Ctrl-C goes to
+foreground after setup succeeds. A dev server, typically. Ctrl-C goes to
 the child process, and its exit code becomes twig's.
 
 ## Script environment
@@ -54,8 +55,8 @@ with three extra variables:
 | `TWIG_BRANCH` | the checked-out branch (unset when detached) |
 | `TWIG_REPO_ROOT` | the main worktree of the repo |
 
-Write setup scripts to be **idempotent** — twig guarantees at-least-once,
-not exactly-once.
+Write setup scripts to be idempotent: twig guarantees at-least-once, not
+exactly-once.
 
-None of this runs until you approve the manifest — see
+None of this runs until you approve the manifest. See
 [the trust model](/twig/guides/trust/).

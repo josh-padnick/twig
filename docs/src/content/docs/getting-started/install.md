@@ -23,7 +23,7 @@ put `twig` on your `PATH`.
 
 ## Shell integration (recommended)
 
-The `tw` function cd's into a worktree in your current shell — something a
+The `tw` function cd's into a worktree in your current shell, something a
 plain binary cannot do. Add to your shell config:
 
 ```sh

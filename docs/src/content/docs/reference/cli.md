@@ -26,7 +26,7 @@ Identical to the bare form, as an explicit subcommand.
 
 ## twig init [--force]
 
-The first-run wizard: discovers likely roots (ranked by repo count and
+The first-run wizard. It discovers likely roots (ranked by repo count and
 Claude-worktree signal), detects installed editors to offer as openers,
 writes a commented config, and offers to add the `tw` function to your
 shell config. Refuses to overwrite an existing config without `--force`.
@@ -35,21 +35,21 @@ wizard automatically.
 
 ## twig cd [fragment]
 
-Prints the resolved worktree path — and nothing else — on stdout, for
+Prints the resolved worktree path on stdout and nothing else, for
 `cd "$(twig cd foo)"`. Supports `-r`. With no fragment, picks among the
 current repo's worktrees.
 
 ## twig enter [dir] [--run] [--setup] [--no-setup]
 
-Runs the on-entry steps in the **current** terminal for `dir` (default:
-cwd): trust gate, setup-if-needed, optional `[run]`. This is the primitive
-that `twig open` injects into new windows and the `tw` function calls
-after cd.
+Runs the on-entry steps in the current terminal for `dir` (default: cwd):
+trust gate, setup-if-needed, optional `[run]`. This is the primitive that
+`twig open` injects into new windows and the `tw` function calls after
+cd.
 
 ## twig list
 
-Every worktree twig can see — current repo, providers, roots — as
-`PATH  BRANCH  STATUS` where status is `clean`, `dirty`, `stale` (record
+Every worktree twig can see (current repo, providers, roots) as
+`PATH  BRANCH  STATUS`, where status is `clean`, `dirty`, `stale` (record
 without directory), or `broken` (git can't read it).
 
 ## twig rm <fragment> [--force]
@@ -74,5 +74,5 @@ the trust store, and terminal availability.
 
 ## Exit codes
 
-twig exits `0` on success and `1` on errors — except `--run`, where the
-run script's own exit code passes through.
+twig exits `0` on success and `1` on errors. The exception is `--run`,
+where the run script's own exit code passes through.

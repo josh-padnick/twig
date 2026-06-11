@@ -6,12 +6,12 @@ description: The exact order and ranking twig uses to turn a fragment into a wor
 `twig <fragment>` resolves in three steps, stopping at the first hit:
 
 1. **Literal path.** If the fragment is an existing directory (absolute,
-   relative, or `~/…`), use it. No further matching.
+   relative, or `~/...`), use it. No further matching.
 2. **The current repo's worktrees.** Inside a repo, twig parses
    `git worktree list --porcelain`. Git knows every worktree of the repo
-   regardless of where it lives on disk — this is what makes Conductor
+   regardless of where it lives on disk, which is what makes Conductor
    workspaces and Claude Code worktrees reachable from the main checkout.
-3. **Filesystem scan.** Outside a repo (or when git had no match), twig
+3. **Filesystem scan.** Outside a repo, or when git had no match, twig
    scans [provider locations](/twig/guides/providers/) and configured
    `roots`, accepting only directories that contain a `.git` entry.
 
@@ -31,17 +31,17 @@ survives:
 | 4 | fragment is a substring of the branch | branch `feat/api-v2` |
 | 5 | stripped fragment is a substring of the basename | dir `my-api-thing/` |
 
-So `api` resolves straight to `feat/api` even when `feat/api-v2` exists —
-no picker. Several candidates in the *same* tier open the fuzzy finder.
+So `api` resolves straight to `feat/api` even when `feat/api-v2` exists,
+with no picker. Several candidates in the same tier open the fuzzy finder.
 
-The *stripped* fragment is everything after the last `/`: typing
+The stripped fragment is everything after the last `/`: typing
 `claude/foo` matches the same things `foo` does, so full branch names
 always work. All matching is case-insensitive.
 
 ## Stale worktrees
 
 A worktree record whose directory has been deleted is never matched.
-If your fragment *only* matches stale records, twig says so and points you
+If your fragment matches only stale records, twig says so and points you
 at `git worktree prune` instead of silently resolving to something else.
 
 ## When a fragment collides with a subcommand
