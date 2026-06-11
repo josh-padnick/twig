@@ -21,11 +21,11 @@ twig -r fix-login
    already on disk: the current repo first, then repos directly under
    your `roots`. There's no GitHub API and no tokens involved, so it
    works with any git host.
-3. Matches use the same [branch tiers](https://joshpadnick.com/twig/guides/resolution/) as local
+3. Matches use the same [branch tiers](../guides/resolution.md) as local
    resolution; several equal matches open the picker.
 4. After you confirm, twig fetches the branch, creates a tracking worktree
    at the configured location, and continues the normal open/cd flow,
-   [setup](https://joshpadnick.com/twig/guides/setup-scripts/) included.
+   [setup](../guides/setup-scripts.md) included.
 
 ## Configuration
 

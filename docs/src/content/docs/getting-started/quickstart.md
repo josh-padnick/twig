@@ -34,7 +34,7 @@ literal path. Exact matches win without a picker; ties open a fuzzy finder.
 
 ## cd instead of opening windows
 
-With [shell integration](https://joshpadnick.com/twig/guides/shell-integration/) installed:
+With [shell integration](../guides/shell-integration.md) installed:
 
 ```sh
 tw matsumoto            # cd's your current shell into the worktree

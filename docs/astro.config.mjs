@@ -4,9 +4,39 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 
+// Content pages cross-link with file-relative .md paths so the links also
+// render on GitHub (PR previews, blob view). This plugin rewrites them at
+// build time into the directory URLs Starlight serves. Non-index pages
+// live at <slug>/index.html — a directory URL — so their links need one
+// extra ../ in URL space.
+function relativeMarkdownLinks() {
+  return function transform(tree, file) {
+    const isIndex = /(^|\/)index\.mdx?$/i.test(file.path ?? '');
+    const walk = (node) => {
+      if (node.type === 'link' && typeof node.url === 'string') {
+        node.url = rewriteMdLink(node.url, isIndex);
+      }
+      for (const child of node.children ?? []) walk(child);
+    };
+    walk(tree);
+  };
+}
+
+function rewriteMdLink(url, isIndex) {
+  if (/^(?:[a-z][a-z0-9+.-]*:|\/|#)/i.test(url)) return url; // absolute or in-page
+  const match = url.match(/^([^#?]*\.mdx?)(#.*)?$/i);
+  if (!match) return url;
+  let path = match[1].replace(/(^|\/)index\.mdx?$/i, '$1').replace(/\.mdx?$/i, '/');
+  if (!isIndex) path = '../' + path;
+  return path + (match[2] ?? '');
+}
+
 export default defineConfig({
   site: 'https://joshpadnick.com',
   base: '/twig',
+  markdown: {
+    remarkPlugins: [relativeMarkdownLinks],
+  },
   integrations: [
     starlight({
       title: 'twig',

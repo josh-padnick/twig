@@ -19,7 +19,13 @@ command = "cursor {{dir}}"
 `twig foo` now opens a Ghostty window and Cursor in the resolved
 worktree. Ad-hoc override: `twig foo --with ghostty`.
 
-## The ghostty kind
+## Available openers
+
+twig ships two: `ghostty`, and the general-purpose `command` that covers
+most other tools without any code. (The `kind` field in config selects
+which one an entry uses.)
+
+### ghostty
 
 The built-in `ghostty` opener (macOS) drives Ghostty via AppleScript. It
 opens a window, or with `-t` enters your current tab, and types
@@ -33,7 +39,7 @@ clear = true        # clear after cd
 delay_ms = 300      # window-creation race delay
 ```
 
-## The command kind
+### command
 
 `command` runs any template through bash:
 
@@ -67,7 +73,7 @@ command = "open http://localhost:5173"
 
 Precedence: the `--with` flag beats a trusted repo's `[open].default`,
 which beats the global default. Untrusted manifests contribute nothing
-(see [the trust model](https://joshpadnick.com/twig/guides/trust/)).
+(see [the trust model](../guides/trust.md)).
 
 ## Where setup runs
 

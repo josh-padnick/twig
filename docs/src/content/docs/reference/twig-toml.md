@@ -6,7 +6,7 @@ description: The per-repo manifest reference for setup, run, and opener override
 `twig.toml` is looked up in the worktree root first, with the main repo
 root as fallback. Commit it once at the main root and it governs every
 worktree. Nothing in it takes effect until the manifest is
-[trusted](https://joshpadnick.com/twig/guides/trust/).
+[trusted](../guides/trust.md).
 
 ```toml
 [setup]

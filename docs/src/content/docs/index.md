@@ -18,13 +18,13 @@ some memorable part of it (`gould`). One command then does the rest:
    the agent's UI and keep any memorable part: here, `gould`.
 2. In any terminal, type `twig gould`. twig finds where that worktree
    lives on disk, opens a terminal there (plus any other
-   [openers](https://joshpadnick.com/twig/guides/openers/) you configured, like Cursor or a
+   [openers](guides/openers.md) you configured, like Cursor or a
    browser tab on your dev server), and runs the repo's
-   [setup script](https://joshpadnick.com/twig/guides/setup-scripts/) if it hasn't run yet.
+   [setup script](guides/setup-scripts.md) if it hasn't run yet.
 3. By default twig opens a new terminal window. To jump there inside the
    terminal you're already using, run `tw gould` instead; `tw` is the
    small shell function that
-   [shell integration](https://joshpadnick.com/twig/guides/shell-integration/) installs. And
+   [shell integration](guides/shell-integration.md) installs. And
    `twig gould --run` also starts the repo's declared dev command after
    setup.
 4. Done with that branch? `twig rm gould` asks for confirmation, calling
@@ -58,30 +58,30 @@ repo's worktree list first (git already knows every worktree, wherever it
 lives on disk), then scans known tool locations and your configured roots.
 Exact matches beat substrings, branches beat directory names, and real
 ambiguity gets a fuzzy picker. Typing `gould` is enough.
-[How resolution works.](https://joshpadnick.com/twig/guides/resolution/)
+[How resolution works.](guides/resolution.md)
 
 Setup runs itself, but only when needed. A `twig.toml` committed at the
 repo root says what a worktree needs (`bun install`, migrations,
 whatever). twig runs it on first entry, then skips it until the manifest
 or a watched lockfile changes. Every entry path converges on the same
 logic, whether you opened a window, cd'd with `tw`, or ran `twig enter`
-by hand. [Setup and run scripts.](https://joshpadnick.com/twig/guides/setup-scripts/)
+by hand. [Setup and run scripts.](guides/setup-scripts.md)
 
 Repo-declared code requires consent. Running scripts on "enter" is an
 attack vector: checking out a PR branch must never execute attacker code.
 twig copies direnv here. Nothing from a `twig.toml` runs until you've
 seen it and approved that exact content, and any edit re-trips the gate.
-[The trust model.](https://joshpadnick.com/twig/guides/trust/)
+[The trust model.](guides/trust.md)
 
 Entering can open your whole working context, not just a terminal.
 Openers run as a set, so one command can open Ghostty, Cursor, and a
 browser tab on your dev server, with per-repo overrides.
-[Openers.](https://joshpadnick.com/twig/guides/openers/)
+[Openers.](guides/openers.md)
 
 Branches that only exist remotely still resolve. With `-r`, a local miss
 falls through to `git ls-remote` across repos you already have; twig
 fetches the branch and builds the worktree for you.
-[Remote pickup.](https://joshpadnick.com/twig/guides/remote-pickup/)
+[Remote pickup.](guides/remote-pickup.md)
 
 ## What twig deliberately isn't
 
@@ -95,5 +95,5 @@ fetches the branch and builds the worktree for you.
 
 ## Where to start
 
-[Install twig](https://joshpadnick.com/twig/getting-started/install/), run `twig init`, then try
-the [quickstart](https://joshpadnick.com/twig/getting-started/quickstart/).
+[Install twig](getting-started/install.md), run `twig init`, then try
+the [quickstart](getting-started/quickstart.md).

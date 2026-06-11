@@ -59,4 +59,4 @@ Write setup scripts to be idempotent: twig guarantees at-least-once, not
 exactly-once.
 
 None of this runs until you approve the manifest. See
-[the trust model](https://joshpadnick.com/twig/guides/trust/).
+[the trust model](../guides/trust.md).

@@ -6,7 +6,7 @@ description: Every twig command and flag.
 ## twig [fragment]
 
 Bare `twig <fragment>` resolves and opens the worktree with your
-configured [opener set](https://joshpadnick.com/twig/guides/openers/). Bare `twig` inside a repo
+configured [opener set](../guides/openers.md). Bare `twig` inside a repo
 fuzzy-picks among that repo's worktrees; outside one it shows help.
 
 | Flag | Meaning |
@@ -61,11 +61,11 @@ remove the main worktree.
 ## twig trust [fragment] [--show|--list|--revoke]
 
 Approve (or inspect/revoke approval of) the `twig.toml` governing a
-worktree. See [the trust model](https://joshpadnick.com/twig/guides/trust/).
+worktree. See [the trust model](../guides/trust.md).
 
 ## twig shell-init <zsh|bash|fish> [--cmd tw]
 
-Emits the [`tw` shell function](https://joshpadnick.com/twig/guides/shell-integration/).
+Emits the [`tw` shell function](../guides/shell-integration.md).
 
 ## twig doctor
 
