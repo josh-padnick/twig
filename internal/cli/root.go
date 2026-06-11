@@ -49,8 +49,9 @@ func newRootCmd(version, commit string) *cobra.Command {
 			if len(args) == 0 {
 				return cmd.Help()
 			}
-			return fmt.Errorf("fragment resolution is not implemented yet (coming in M1)")
+			return fmt.Errorf("opening worktrees lands in M4 — until then: cd \"$(twig cd %s)\"", args[0])
 		},
 	}
+	root.AddCommand(newCdCmd(), newListCmd())
 	return root
 }
