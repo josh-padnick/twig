@@ -84,13 +84,22 @@ func TestChecklistRowsStayAligned(t *testing.T) {
 		t.Fatal(err)
 	}
 	stripped := regexp.MustCompile(`\x1b\[[0-9;]*[A-Za-z]`).ReplaceAllString(out.String(), "")
-	for _, line := range strings.Split(stripped, "\r\n") {
-		idx := strings.Index(line, "[")
-		if idx == -1 {
+	stripped = strings.ReplaceAll(stripped, "\r", "")
+	for _, line := range strings.Split(stripped, "\n") {
+		// Measure in runes: the cursor pointer › is multibyte but renders
+		// as a single column, which is what alignment is about.
+		col := -1
+		for i, r := range []rune(line) {
+			if r == '[' {
+				col = i
+				break
+			}
+		}
+		if col == -1 {
 			continue // not an item row
 		}
-		if idx != 2 {
-			t.Errorf("checkbox at column %d, want 2, in line %q", idx, line)
+		if col != 2 {
+			t.Errorf("checkbox at column %d, want 2, in line %q", col, line)
 		}
 	}
 }
