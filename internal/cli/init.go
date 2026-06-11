@@ -144,7 +144,7 @@ func chooseRoots(home string) ([]initwiz.RootCandidate, error) {
 func reportDetectedTools(home string, chosen []initwiz.RootCandidate) bool {
 	var lines []string
 	if initwiz.HasConductor(home) {
-		lines = append(lines, "  Conductor: workspaces in "+displayPath(home, filepath.Join(home, "conductor", "workspaces")))
+		lines = append(lines, "  [Conductor] workspaces in "+displayPath(home, filepath.Join(home, "conductor", "workspaces")))
 	}
 	var claudeRoots []string
 	for _, c := range chosen {
@@ -153,10 +153,10 @@ func reportDetectedTools(home string, chosen []initwiz.RootCandidate) bool {
 		}
 	}
 	if len(claudeRoots) > 0 {
-		lines = append(lines, "  Claude Code: worktrees in repos under "+displayPaths(home, claudeRoots))
+		lines = append(lines, "  [Claude Code] worktrees in repos under "+displayPaths(home, claudeRoots))
 	}
 	if initwiz.HasCodex(home) {
-		lines = append(lines, "  Codex: cloud sessions live on GitHub as branches; fetch one with `twig -r <fragment>`")
+		lines = append(lines, "  [Codex] cloud sessions live on GitHub as branches; fetch one with `twig -r <fragment>`")
 	}
 	if len(lines) == 0 {
 		return false
@@ -194,9 +194,10 @@ func offerShellInit(home string) {
 	if !ok {
 		return
 	}
-	ui.Infof("\ntwig can add a small `tw` function to your shell. It lets you jump")
-	ui.Infof("to a worktree inside the current terminal instead of opening a new")
-	ui.Infof("window: `tw gould` cd's this shell there and runs setup.")
+	ui.Infof("")
+	ui.Boldf("twig can add a small `tw` function to your shell. It lets you jump")
+	ui.Boldf("to a worktree inside the current terminal instead of opening a new")
+	ui.Boldf("window: `tw gould` cd's this shell there and runs setup.")
 	yes, err := ui.ConfirmYN(fmt.Sprintf("Add the tw shell function to %s?", displayPath(home, rc.Path)), false)
 	if err != nil || !yes {
 		ui.Infof("To enable in-place cd later, add:  %s", rc.Line)
