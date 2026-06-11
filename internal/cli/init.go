@@ -69,7 +69,11 @@ func runInitWizard(force bool) error {
 		ui.Infof("Roots to scan: %s", displayPaths(home, roots))
 	}
 
-	reportDetectedTools(home, chosen)
+	if reportDetectedTools(home, chosen) {
+		// A distinct beat: let the user read the detection summary before
+		// the opener questions start.
+		_, _ = ui.ReadLine("\nPress ENTER to continue ")
+	}
 
 	editors := chooseEditors()
 
@@ -131,9 +135,10 @@ func chooseRoots(home string) ([]initwiz.RootCandidate, error) {
 }
 
 // reportDetectedTools tells the user, concretely, which worktree-creating
-// tools twig found and where it will look for their work. Silent when
-// nothing was detected.
-func reportDetectedTools(home string, chosen []initwiz.RootCandidate) {
+// tools twig found and where it will look for their work. Returns whether
+// anything was detected and printed (silent otherwise), so the caller can
+// pause for reading.
+func reportDetectedTools(home string, chosen []initwiz.RootCandidate) bool {
 	var lines []string
 	if initwiz.HasConductor(home) {
 		lines = append(lines, "  Conductor: workspaces in "+displayPath(home, filepath.Join(home, "conductor", "workspaces")))
@@ -151,12 +156,13 @@ func reportDetectedTools(home string, chosen []initwiz.RootCandidate) {
 		lines = append(lines, "  Codex: cloud sessions live on GitHub as branches; fetch one with `twig -r <fragment>`")
 	}
 	if len(lines) == 0 {
-		return
+		return false
 	}
 	ui.Infof("\nI detected the following tools. Here's where twig will look for their worktrees:")
 	for _, line := range lines {
 		ui.Infof("%s", line)
 	}
+	return true
 }
 
 // chooseEditors asks per detected editor under one lead question;
