@@ -18,6 +18,16 @@ func Infof(format string, args ...any) {
 	fmt.Fprintf(os.Stderr, format+"\n", args...)
 }
 
+// Boldf prints an emphasized line to stderr, degrading to plain text when
+// stderr isn't a terminal (logs, pipes).
+func Boldf(format string, args ...any) {
+	if IsTTY(os.Stderr) {
+		fmt.Fprintf(os.Stderr, "\x1b[1m"+format+"\x1b[0m\n", args...)
+		return
+	}
+	Infof(format, args...)
+}
+
 // Warnf prints a warning to stderr.
 func Warnf(format string, args ...any) {
 	fmt.Fprintf(os.Stderr, "twig: warning: "+format+"\n", args...)

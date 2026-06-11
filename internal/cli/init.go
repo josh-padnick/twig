@@ -161,8 +161,9 @@ func reportDetectedTools(home string, chosen []initwiz.RootCandidate) bool {
 	if len(lines) == 0 {
 		return false
 	}
-	ui.Infof("\nI detected the following tools. In addition to the above paths, twig")
-	ui.Infof("will also look for git worktrees in the following paths:")
+	ui.Infof("")
+	ui.Boldf("I detected the following tools. In addition to the above paths, twig")
+	ui.Boldf("will also look for git worktrees in the following paths:")
 	for _, line := range lines {
 		ui.Infof("%s", line)
 	}
