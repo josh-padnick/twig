@@ -75,6 +75,6 @@ func newRootCmd(version, commit string) *cobra.Command {
 		},
 	}
 	addOpenFlags(root, &f)
-	root.AddCommand(newCdCmd(), newListCmd(), newTrustCmd(), newEnterCmd(), newOpenCmd(), newRmCmd(), newDoctorCmd())
+	root.AddCommand(newCdCmd(), newListCmd(), newTrustCmd(), newEnterCmd(), newOpenCmd(), newRmCmd(), newDoctorCmd(), newShellInitCmd())
 	return root
 }
