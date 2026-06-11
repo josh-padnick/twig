@@ -1,10 +1,11 @@
 // Astro + Starlight configuration for the twig documentation site,
-// deployed to GitHub Pages at https://josh-padnick.github.io/twig.
+// deployed to GitHub Pages. The account's verified custom domain means it
+// serves at https://joshpadnick.com/twig/ (the github.io URL redirects).
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 
 export default defineConfig({
-  site: 'https://josh-padnick.github.io',
+  site: 'https://joshpadnick.com',
   base: '/twig',
   integrations: [
     starlight({
