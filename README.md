@@ -10,7 +10,7 @@ tw gould            # ...or cd your current shell into it
 twig is a small CLI that makes it easy to work with the many git worktrees
 created by AI coding tools like Claude Code, Codex, and Conductor.
 
-The idea: while you're in, say, the Claude Code desktop UI, you glance at
+The idea: while you're in, say, the Claude Code or Codex UI, you glance at
 the worktree or branch name (`claude/xenodochial-gould-7bf514`) and note
 some memorable part of it (`gould`). One command then finds where that
 directory actually lives on your machine, opens a terminal there or cd's
@@ -25,8 +25,8 @@ browser tab pointed at your dev server.
 Every tool has its own ideas about where work lives. Claude Code desktop
 checks sessions out inside the repo under `.claude/worktrees/`, with
 generated names nobody types twice. Conductor keeps workspaces at
-`~/conductor/workspaces/<project>/<name>`. Cloud sessions leave a branch
-on GitHub and no local directory at all.
+`~/conductor/workspaces/<project>/<name>`. Cloud sessions (Claude Code
+web, Codex) leave a branch on GitHub and no local directory at all.
 
 twig knows all of these out of the box. The first two are scanned
 automatically. For the third, `twig -r <fragment>` searches the remotes of
@@ -53,7 +53,7 @@ twig init              # interactive first-run setup (roots, openers, shell)
 twig <fragment>        # open the matching worktree (new Ghostty window)
 twig                   # inside a repo: fuzzy-pick among its worktrees
 twig -t <fragment>     # enter in the current tab instead
-twig -r <fragment>     # also search remote branches (cloud sessions)
+twig -r <fragment>     # also search remote branches (Claude Code web, Codex)
 tw <fragment>          # cd in place (via shell-init)
 twig list              # everything twig can see, with branch + status
 twig rm <fragment>     # remove a worktree (confirms; keeps the branch)

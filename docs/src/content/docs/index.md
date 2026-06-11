@@ -6,7 +6,7 @@ description: What twig is, and the problem it exists to solve.
 twig is a small CLI that makes it easy to work with the many git worktrees
 created by AI coding tools like Claude Code, Codex, and Conductor.
 
-The main idea: while you're in, say, the Claude Code desktop UI, you glance
+The main idea: while you're in, say, the Claude Code or Codex UI, you glance
 at the worktree or branch name (`claude/xenodochial-gould-7bf514`) and note
 some memorable part of it (`gould`). One command then does the rest. It
 finds where that directory actually lives on your machine, opens a terminal
@@ -87,7 +87,8 @@ fetches the branch and builds the worktree for you.
 - A daemon or shell hijack. It's a single static binary plus an optional
   three-line shell function; nothing runs in the background.
 - Configuration-hungry. Conductor and Claude Code layouts work with zero
-  config, and `twig init` generates the rest in about thirty seconds.
+  config, Codex cloud branches are one `-r` away, and `twig init`
+  generates the rest in about thirty seconds.
 
 ## Where to start
 
