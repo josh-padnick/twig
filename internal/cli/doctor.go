@@ -57,7 +57,7 @@ func runDoctor(w io.Writer) {
 		report(w, "fail", "config %s: %v", cfgPath, err)
 	default:
 		if _, statErr := os.Stat(cfgPath); statErr != nil {
-			report(w, "ok", "config: none at %s (using defaults)", cfgPath)
+			report(w, "ok", "config: none at %s (using defaults — run `twig init` to create one)", cfgPath)
 		} else {
 			report(w, "ok", "config: %s", cfgPath)
 		}

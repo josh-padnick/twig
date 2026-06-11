@@ -64,6 +64,33 @@ func One(cands []resolve.Candidate) (resolve.Candidate, error) {
 	return OneOf(cands, Display)
 }
 
+// ManyOf runs a multi-select fuzzy picker (TAB toggles, Enter confirms;
+// with no toggles the highlighted item is the selection).
+func ManyOf[T any](items []T, display func(T) string) ([]T, error) {
+	if len(items) == 0 {
+		return nil, nil
+	}
+	if !hasTTY() {
+		lines := make([]string, len(items))
+		for i, it := range items {
+			lines[i] = display(it)
+		}
+		return nil, &NoTTYError{Lines: lines}
+	}
+	idxs, err := fuzzyfinder.FindMulti(items, func(i int) string { return display(items[i]) })
+	if err != nil {
+		if errors.Is(err, fuzzyfinder.ErrAbort) {
+			return nil, ErrCancelled
+		}
+		return nil, fmt.Errorf("picker: %w", err)
+	}
+	out := make([]T, 0, len(idxs))
+	for _, i := range idxs {
+		out = append(out, items[i])
+	}
+	return out, nil
+}
+
 // Display renders a candidate as "path  [branch]", shortening the home
 // prefix to ~ for readability in the picker and error lists.
 func Display(c resolve.Candidate) string {

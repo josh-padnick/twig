@@ -3,6 +3,19 @@ title: Quickstart
 description: From zero to opening worktrees by fragment in two minutes.
 ---
 
+## Generate your config
+
+```sh
+twig init
+```
+
+The wizard scans well-known project locations (`~/Code`, `~/Projects`, …),
+proposes roots ranked by how worktree-shaped they look, detects installed
+editors to offer as openers, and can add the `tw` shell function to your
+shell config. It writes a commented `~/.config/twig/config.toml`. (Skip it
+and twig still works inside any repo and for Conductor workspaces; the
+first interactive miss with no config will offer the wizard too.)
+
 ## Open a worktree by fragment
 
 From inside any repo that has worktrees:
@@ -59,12 +72,12 @@ twig list               # all worktrees: current repo + providers + roots
 twig rm <fragment>      # remove a worktree (confirms; branch is kept)
 ```
 
-## Point twig at your projects
+## Point twig at more projects
 
-Worktrees in `~/conductor/workspaces` and `<repo>/.claude/worktrees` are
-found automatically. For anything else, declare roots in
-`~/.config/twig/config.toml`:
+Worktrees in `~/conductor/workspaces` are found automatically, and
+`<repo>/.claude/worktrees` is covered for every repo under your roots.
+Add more roots any time in `~/.config/twig/config.toml`:
 
 ```toml
-roots = ["~/Code/myorg"]
+roots = ["~/Code/myorg", "~/Code/another"]
 ```

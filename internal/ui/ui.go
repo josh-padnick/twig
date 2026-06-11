@@ -33,6 +33,32 @@ func IsTTY(f *os.File) bool {
 	return term.IsTerminal(int(f.Fd()))
 }
 
+// ReadLine prompts on the controlling terminal and returns the trimmed
+// line the user types. Errors when no terminal is available.
+func ReadLine(prompt string) (string, error) {
+	tty, err := os.OpenFile("/dev/tty", os.O_RDWR, 0)
+	if err != nil {
+		return "", fmt.Errorf("no terminal available for input: %w", err)
+	}
+	defer tty.Close()
+	fmt.Fprint(tty, prompt)
+	line, err := bufio.NewReader(tty).ReadString('\n')
+	if err != nil {
+		return "", fmt.Errorf("reading input: %w", err)
+	}
+	return strings.TrimSpace(line), nil
+}
+
+// HasTTY reports whether a controlling terminal exists for prompts.
+func HasTTY() bool {
+	tty, err := os.OpenFile("/dev/tty", os.O_RDWR, 0)
+	if err != nil {
+		return false
+	}
+	tty.Close()
+	return true
+}
+
 // ConfirmYN asks a yes/no question on the controlling terminal so the answer
 // can't be satisfied by piped stdin and the prompt can't pollute captured
 // stdout. Returns an error when no terminal is available (non-interactive).

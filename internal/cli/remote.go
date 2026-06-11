@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/josh-padnick/twig/internal/config"
 	"github.com/josh-padnick/twig/internal/pick"
 	"github.com/josh-padnick/twig/internal/remote"
 	"github.com/josh-padnick/twig/internal/resolve"
@@ -81,4 +82,31 @@ func pickupRemote(frag string, noMatchErr error) (resolve.Candidate, error) {
 	}
 	ui.Infof("twig: created worktree %s (branch %s)", path, m.Branch)
 	return resolve.Candidate{Path: path, Branch: m.Branch, Source: resolve.SourceRemote}, nil
+}
+
+// offerInitWizard reports whether it ran the init wizard to completion in
+// response to a no-match failure. Only fires interactively, only for a
+// clean no-match, and only when no config file exists yet.
+func offerInitWizard(resolveErr error) bool {
+	var noMatch *resolve.NoMatchError
+	if !errors.As(resolveErr, &noMatch) || !ui.HasTTY() {
+		return false
+	}
+	cfgPath, err := config.Path()
+	if err != nil {
+		return false
+	}
+	if _, err := os.Stat(cfgPath); err == nil {
+		return false // config exists; the miss is real
+	}
+	ui.Errorf("%v", resolveErr)
+	yes, err := ui.ConfirmYN("No twig config exists yet — run the setup wizard now?", true)
+	if err != nil || !yes {
+		return false
+	}
+	if err := runInitWizard(false); err != nil {
+		ui.Errorf("%v", err)
+		return false
+	}
+	return true
 }

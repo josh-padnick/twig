@@ -62,6 +62,12 @@ func newOpenCmd() *cobra.Command {
 func runOpen(frag string, f openFlags) error {
 	c, err := resolveFragmentOrRemote(frag, f.remote)
 	if err != nil {
+		// First-run experience: an interactive miss with no config file on
+		// disk is almost always missing roots — offer the wizard, then
+		// retry once (the config now exists, so this can't recurse).
+		if offerInitWizard(err) {
+			return runOpen(frag, f)
+		}
 		return err
 	}
 	cfg, err := loadConfig()

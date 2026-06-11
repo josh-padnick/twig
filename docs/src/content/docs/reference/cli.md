@@ -24,6 +24,15 @@ A fragment that collides with a subcommand name: use `twig open <fragment>`.
 
 Identical to the bare form, as an explicit subcommand.
 
+## twig init [--force]
+
+The first-run wizard: discovers likely roots (ranked by repo count and
+Claude-worktree signal), detects installed editors to offer as openers,
+writes a commented config, and offers to add the `tw` function to your
+shell config. Refuses to overwrite an existing config without `--force`.
+An interactive `twig <fragment>` miss with no config file offers this
+wizard automatically.
+
 ## twig cd [fragment]
 
 Prints the resolved worktree path — and nothing else — on stdout, for

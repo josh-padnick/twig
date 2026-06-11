@@ -95,7 +95,7 @@ func (e *NoMatchError) Error() string {
 	}
 	msg := fmt.Sprintf("no worktree matching %q (searched %s)", e.Fragment, strings.Join(searched, "; "))
 	if len(e.Roots) == 0 {
-		msg += "\nhint: no roots are configured — if your projects live outside the provider locations, add\n  roots = [\"~/Code/yourorg\"]\nto ~/.config/twig/config.toml"
+		msg += "\nhint: no roots are configured — run `twig init` to set them up, or add\n  roots = [\"~/Code/yourorg\"]\nto ~/.config/twig/config.toml"
 	}
 	return msg
 }
