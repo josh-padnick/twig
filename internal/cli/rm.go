@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -34,14 +35,28 @@ func newRmCmd() *cobra.Command {
 				return fmt.Errorf("refusing to remove the main worktree %s", mainDir)
 			}
 			branch, _ := gitx.CurrentBranch(c.Path)
-			label := c.Path
-			if branch != "" {
-				label = fmt.Sprintf("%s (branch %s)", c.Path, branch)
-			}
 			if !force {
+				// The confirmation calls out anything the user might want
+				// to deal with first: unpushed commits, uncommitted
+				// changes. Neither is lost by removal (the branch is
+				// kept), but both deserve a heads-up.
+				details := []string{}
+				if branch != "" {
+					details = append(details, "branch "+branch)
+				}
+				if ahead, ok := gitx.AheadOfUpstream(c.Path); ok && ahead > 0 {
+					details = append(details, fmt.Sprintf("%d commit(s) not pushed to upstream", ahead))
+				}
+				if dirty, err := gitx.IsDirty(c.Path); err == nil && dirty {
+					details = append(details, "uncommitted changes")
+				}
+				label := c.Path
+				if len(details) > 0 {
+					label = fmt.Sprintf("%s (%s)", c.Path, strings.Join(details, ", "))
+				}
 				yes, err := ui.ConfirmYN("remove worktree "+label+"?", false)
 				if err != nil {
-					return fmt.Errorf("confirmation needs a terminal — use --force non-interactively (%v)", err)
+					return fmt.Errorf("confirmation needs a terminal; use --force non-interactively (%v)", err)
 				}
 				if !yes {
 					return errors.New("cancelled")

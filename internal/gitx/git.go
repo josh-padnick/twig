@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"fmt"
 	"os/exec"
+	"strconv"
 	"strings"
 )
 
@@ -146,6 +147,21 @@ func Prune(repoDir string) error {
 // Version returns the git version string, for doctor.
 func Version() (string, error) {
 	return run("", "version")
+}
+
+// AheadOfUpstream returns how many commits the worktree's branch has that
+// its upstream doesn't. ok is false when there is no upstream to compare
+// against (no remote, no tracking branch).
+func AheadOfUpstream(dir string) (count int, ok bool) {
+	out, err := run(dir, "rev-list", "--count", "@{upstream}..HEAD")
+	if err != nil {
+		return 0, false
+	}
+	n, err := strconv.Atoi(strings.TrimSpace(out))
+	if err != nil {
+		return 0, false
+	}
+	return n, true
 }
 
 // IsDirty reports whether the worktree at dir has uncommitted changes
