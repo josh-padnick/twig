@@ -93,7 +93,11 @@ func (e *NoMatchError) Error() string {
 	if len(searched) == 0 {
 		searched = append(searched, "nothing — no repo, providers, or roots")
 	}
-	return fmt.Sprintf("no worktree matching %q (searched %s)", e.Fragment, strings.Join(searched, "; "))
+	msg := fmt.Sprintf("no worktree matching %q (searched %s)", e.Fragment, strings.Join(searched, "; "))
+	if len(e.Roots) == 0 {
+		msg += "\nhint: no roots are configured — if your projects live outside the provider locations, add\n  roots = [\"~/Code/yourorg\"]\nto ~/.config/twig/config.toml"
+	}
+	return msg
 }
 
 // StaleError reports that the fragment only matched worktree records whose
