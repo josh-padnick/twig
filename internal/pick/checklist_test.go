@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"reflect"
+	"regexp"
 	"strings"
 	"testing"
 )
@@ -71,6 +72,26 @@ func TestChecklistCancel(t *testing.T) {
 	}
 	if _, err := run(t, "\x03", []string{"alpha"}, nil); !errors.Is(err, ErrCancelled) {
 		t.Errorf("ctrl-c: err = %v, want ErrCancelled", err)
+	}
+}
+
+// Every row must put its checkbox in the same column whether or not the
+// cursor is on it — a narrower pointer prefix makes rows jiggle sideways.
+func TestChecklistRowsStayAligned(t *testing.T) {
+	var out bytes.Buffer
+	_, err := runChecklist(strings.NewReader("\r"), &out, "Pick:", []string{"alpha", "beta"}, func(s string) string { return s }, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	stripped := regexp.MustCompile(`\x1b\[[0-9;]*[A-Za-z]`).ReplaceAllString(out.String(), "")
+	for _, line := range strings.Split(stripped, "\r\n") {
+		idx := strings.Index(line, "[")
+		if idx == -1 {
+			continue // not an item row
+		}
+		if idx != 2 {
+			t.Errorf("checkbox at column %d, want 2, in line %q", idx, line)
+		}
 	}
 }
 

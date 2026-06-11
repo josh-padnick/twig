@@ -81,12 +81,15 @@ func runChecklist[T any](in io.Reader, out io.Writer, question string, items []T
 			if checked[i] {
 				box = ansiGreen + "[x]" + ansiReset
 			}
-			pointer := "  "
-			line := fmt.Sprintf("%s %s %s", pointer, box, display(it))
+			// The pointer must occupy exactly the same columns as the
+			// indent, or rows shift sideways as the cursor moves.
+			prefix := "  "
+			name := display(it)
 			if i == cursor {
-				line = fmt.Sprintf("%s› %s %s%s%s", ansiCyan, box, ansiBold, display(it), ansiReset)
+				prefix = ansiCyan + "› " + ansiReset
+				name = ansiBold + name + ansiReset
 			}
-			fmt.Fprintf(out, "%s%s\r\n", ansiClearLine, line)
+			fmt.Fprintf(out, "%s%s%s %s\r\n", ansiClearLine, prefix, box, name)
 		}
 	}
 	draw(true)
