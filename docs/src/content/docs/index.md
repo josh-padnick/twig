@@ -3,15 +3,25 @@ title: Why twig
 description: What twig is, and the problem it exists to solve.
 ---
 
-twig is a small CLI that turns any memorable fragment — a branch name, a
-branch suffix, a directory slug — into *being in the right worktree*: a
-terminal opened there (or your current shell cd'd there), your editor
-pointed at it, and the repo's setup script already run.
+twig is a small CLI that makes it easy to work with the many git worktrees
+created by AI coding tools like Claude Code, Codex, and Conductor.
+
+The main idea: while you're in, say, the Claude Code desktop UI, you glance
+at the worktree or branch name (`claude/xenodochial-gould-7bf514`) and note
+some memorable part of it (`gould`). One command then does the rest — finds
+where that directory actually lives on your machine, opens a terminal there
+(or cd's your current shell), and runs the repo's optional setup and run
+commands:
 
 ```sh
 twig gould
-# → opens Ghostty in ~/Code/fabricahq/app/.claude/worktrees/xenodochial-gould-7bf514
+# → opens Ghostty in ~/Code/fabricahq/app/.claude/worktrees/xenodochial-gould-7bf514,
+#   with the repo's setup script already run
 ```
+
+twig can also automatically open other tools in that working directory at
+the same time — Cursor, VS Code, a browser tab on your dev server —
+whatever set of openers you configure.
 
 ## The problem
 
