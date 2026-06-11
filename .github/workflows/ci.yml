@@ -1,0 +1,23 @@
+# Continuous integration: vet and test the Go module on Linux and macOS.
+# macOS is in the matrix because the Ghostty opener is darwin-build-tagged
+# and resolver tests exercise the system git binary.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - run: go vet ./...
+      - run: go test ./...

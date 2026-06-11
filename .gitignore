@@ -1,0 +1,12 @@
+# Build artifacts
+/bin/
+/dist/
+/twig
+
+# Docs site (Astro/Starlight)
+docs/node_modules/
+docs/dist/
+docs/.astro/
+
+# OS noise
+.DS_Store
