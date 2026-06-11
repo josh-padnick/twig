@@ -67,7 +67,7 @@ command = "open http://localhost:5173"
 
 Precedence: the `--with` flag beats a trusted repo's `[open].default`,
 which beats the global default. Untrusted manifests contribute nothing
-(see [the trust model](/twig/guides/trust/)).
+(see [the trust model](https://joshpadnick.com/twig/guides/trust/)).
 
 ## Where setup runs
 

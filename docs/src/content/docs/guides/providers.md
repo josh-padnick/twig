@@ -22,7 +22,7 @@ path.
 
 Codex keeps no local worktree directory. Its cloud sessions, like Claude
 Code web sessions, exist as branches on GitHub, so they're covered by
-[remote branch pickup](/twig/guides/remote-pickup/) rather than a
+[remote branch pickup](https://joshpadnick.com/twig/guides/remote-pickup/) rather than a
 provider.
 
 ## Trimming the set
@@ -41,4 +41,4 @@ live scan locations.
 A provider is a name plus a function returning scan-parent directories:
 one small entry in `internal/resolve/providers.go`. PRs for new tool
 layouts are welcome; see
-[Contributing openers and providers](/twig/contributing/openers/).
+[Contributing openers and providers](https://joshpadnick.com/twig/contributing/openers/).

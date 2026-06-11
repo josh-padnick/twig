@@ -12,11 +12,11 @@ description: The exact order and ranking twig uses to turn a fragment into a wor
    regardless of where it lives on disk, which is what makes Conductor
    workspaces and Claude Code worktrees reachable from the main checkout.
 3. **Filesystem scan.** Outside a repo, or when git had no match, twig
-   scans [provider locations](/twig/guides/providers/) and configured
+   scans [provider locations](https://joshpadnick.com/twig/guides/providers/) and configured
    `roots`, accepting only directories that contain a `.git` entry.
 
 If nothing matches and remote pickup is enabled, twig can also
-[search remote branches](/twig/guides/remote-pickup/).
+[search remote branches](https://joshpadnick.com/twig/guides/remote-pickup/).
 
 ## Ranking: exact beats substring, branches beat directories
 

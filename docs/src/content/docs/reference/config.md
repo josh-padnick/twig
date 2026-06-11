@@ -50,5 +50,5 @@ auto = true          # run setup logic on entry; false = only with --setup
 | Path | Contents |
 | --- | --- |
 | `~/.config/twig/config.toml` | this file |
-| `~/.local/share/twig/trust/` | [trust approvals](/twig/guides/trust/) |
-| `<gitdir>/twig-setup.json` | per-worktree [setup state](/twig/guides/setup-scripts/) |
+| `~/.local/share/twig/trust/` | [trust approvals](https://joshpadnick.com/twig/guides/trust/) |
+| `<gitdir>/twig-setup.json` | per-worktree [setup state](https://joshpadnick.com/twig/guides/setup-scripts/) |
