@@ -29,7 +29,7 @@ func Render(shellName, cmd, twigPath string) (string, error) {
 	return strings.ReplaceAll(out, "%TWIG%", quoted), nil
 }
 
-// posixQuote single-quotes for zsh/bash using the '\'' idiom.
+// posixQuote single-quotes for zsh/bash using the '\” idiom.
 func posixQuote(s string) string {
 	return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'"
 }

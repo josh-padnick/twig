@@ -64,40 +64,6 @@ func One(cands []resolve.Candidate) (resolve.Candidate, error) {
 	return OneOf(cands, Display)
 }
 
-// ManyOf runs a multi-select fuzzy picker (TAB toggles, Enter confirms;
-// with no toggles the highlighted item is the selection). The header
-// renders inside the picker UI — the picker takes over the screen, so any
-// instructions printed beforehand would be invisible while it runs.
-// preselected, when non-nil, marks items as selected up front.
-func ManyOf[T any](items []T, display func(T) string, header string, preselected func(T) bool) ([]T, error) {
-	if len(items) == 0 {
-		return nil, nil
-	}
-	if !hasTTY() {
-		lines := make([]string, len(items))
-		for i, it := range items {
-			lines[i] = display(it)
-		}
-		return nil, &NoTTYError{Lines: lines}
-	}
-	opts := []fuzzyfinder.Option{fuzzyfinder.WithHeader(header)}
-	if preselected != nil {
-		opts = append(opts, fuzzyfinder.WithPreselected(func(i int) bool { return preselected(items[i]) }))
-	}
-	idxs, err := fuzzyfinder.FindMulti(items, func(i int) string { return display(items[i]) }, opts...)
-	if err != nil {
-		if errors.Is(err, fuzzyfinder.ErrAbort) {
-			return nil, ErrCancelled
-		}
-		return nil, fmt.Errorf("picker: %w", err)
-	}
-	out := make([]T, 0, len(idxs))
-	for _, i := range idxs {
-		out = append(out, items[i])
-	}
-	return out, nil
-}
-
 // Display renders a candidate as "path  [branch]", shortening the home
 // prefix to ~ for readability in the picker and error lists.
 func Display(c resolve.Candidate) string {

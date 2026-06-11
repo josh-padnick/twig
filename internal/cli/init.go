@@ -116,7 +116,9 @@ func chooseRoots(home string) ([]initwiz.RootCandidate, error) {
 		return []initwiz.RootCandidate{{Path: line}}, nil
 	}
 
-	return pick.ManyOf(cands,
+	return pick.Checklist(
+		"Which folders should twig search for worktrees?",
+		cands,
 		func(c initwiz.RootCandidate) string {
 			label := fmt.Sprintf("%s (%d repos", displayPath(home, c.Path), c.RepoCount)
 			if c.ClaudeCount > 0 {
@@ -124,18 +126,17 @@ func chooseRoots(home string) ([]initwiz.RootCandidate, error) {
 			}
 			return label + ")"
 		},
-		"Which folders should twig search for worktrees? TAB selects, Enter confirms.",
 		func(c initwiz.RootCandidate) bool { return c.ClaudeCount > 0 },
 	)
 }
 
 // reportDetectedTools tells the user, concretely, which worktree-creating
-// tools twig found and what that means. Silent when nothing was detected.
+// tools twig found and where it will look for their work. Silent when
+// nothing was detected.
 func reportDetectedTools(home string, chosen []initwiz.RootCandidate) {
 	var lines []string
 	if initwiz.HasConductor(home) {
-		lines = append(lines, fmt.Sprintf("  Conductor: workspaces in %s will be found automatically",
-			displayPath(home, filepath.Join(home, "conductor", "workspaces"))))
+		lines = append(lines, "  Conductor: workspaces in "+displayPath(home, filepath.Join(home, "conductor", "workspaces")))
 	}
 	var claudeRoots []string
 	for _, c := range chosen {
@@ -144,23 +145,31 @@ func reportDetectedTools(home string, chosen []initwiz.RootCandidate) {
 		}
 	}
 	if len(claudeRoots) > 0 {
-		lines = append(lines, fmt.Sprintf("  Claude Code: worktrees in repos under %s will be found automatically",
-			displayPaths(home, claudeRoots)))
+		lines = append(lines, "  Claude Code: worktrees in repos under "+displayPaths(home, claudeRoots))
+	}
+	if initwiz.HasCodex(home) {
+		lines = append(lines, "  Codex: cloud sessions live on GitHub as branches; fetch one with `twig -r <fragment>`")
 	}
 	if len(lines) == 0 {
 		return
 	}
-	ui.Infof("\nDetected tools that create worktrees:")
+	ui.Infof("\nI detected the following tools. Here's where twig will look for their worktrees:")
 	for _, line := range lines {
 		ui.Infof("%s", line)
 	}
 }
 
-// chooseEditors asks per detected editor; declining everything is fine.
+// chooseEditors asks per detected editor under one lead question;
+// declining everything is fine.
 func chooseEditors() []initwiz.Editor {
+	editors := initwiz.DetectEditors()
+	if len(editors) == 0 {
+		return nil
+	}
+	ui.Infof("\nWhich tools should I automatically open when you enter a worktree?")
 	var chosen []initwiz.Editor
-	for _, e := range initwiz.DetectEditors() {
-		yes, err := ui.ConfirmYN(fmt.Sprintf("Should I open %s when entering a worktree?", e.DisplayName), false)
+	for _, e := range editors {
+		yes, err := ui.ConfirmYN(fmt.Sprintf("Open %s?", e.DisplayName), false)
 		if err == nil && yes {
 			chosen = append(chosen, e)
 		}

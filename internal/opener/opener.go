@@ -23,8 +23,8 @@ const (
 
 // Target is what an opener acts on.
 type Target struct {
-	Dir      string     // worktree directory (absolute)
-	EnterCmd string     // twig-enter command to run in the shell, "" for none
+	Dir      string // worktree directory (absolute)
+	EnterCmd string // twig-enter command to run in the shell, "" for none
 	Mode     TargetMode
 }
 

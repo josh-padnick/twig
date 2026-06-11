@@ -134,3 +134,11 @@ func HasConductor(home string) bool {
 	fi, err := os.Stat(filepath.Join(home, "conductor", "workspaces"))
 	return err == nil && fi.IsDir()
 }
+
+// HasCodex reports whether the Codex CLI's home directory exists. Codex
+// keeps no local worktrees — its sessions live as GitHub branches — so
+// the wizard points at remote pickup instead of a scan location.
+func HasCodex(home string) bool {
+	fi, err := os.Stat(filepath.Join(home, ".codex"))
+	return err == nil && fi.IsDir()
+}
