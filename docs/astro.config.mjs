@@ -15,6 +15,7 @@ export default defineConfig({
         { icon: 'github', label: 'GitHub', href: 'https://github.com/josh-padnick/twig' },
       ],
       sidebar: [
+        { label: 'Why twig', link: '/' },
         {
           label: 'Getting started',
           items: [
