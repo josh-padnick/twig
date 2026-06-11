@@ -10,15 +10,23 @@ tw gould            # ...or cd your current shell into it
 twig is a small CLI that makes it easy to work with the many git worktrees
 created by AI coding tools like Claude Code, Codex, and Conductor.
 
-The idea: while you're in, say, the Claude Code or Codex UI, you glance at
-the worktree or branch name (`claude/xenodochial-gould-7bf514`) and note
-some memorable part of it (`gould`). One command then finds where that
-directory actually lives on your machine, opens a terminal there or cd's
-your current shell, and runs the repo's optional setup and run commands.
-twig can also open other tools in the same directory: Cursor, VS Code, a
-browser tab pointed at your dev server.
-
 **[Full documentation → joshpadnick.com/twig](https://joshpadnick.com/twig/)**
+
+## How to use it
+
+![Spotting the branch name in a Claude Code session, then opening that worktree locally with twig](docs/src/assets/claude-code-to-twig.png)
+
+1. An agent finishes some work. In the Claude Code or Codex UI, glance at
+   the session's branch or worktree name and keep any memorable part of
+   it. Here that's `gould` out of `claude/xenodochial-gould-7bf514`.
+2. In any terminal, type `twig gould`. twig finds where that worktree
+   lives on disk, opens a new terminal window there (plus any other
+   openers you configured, like Cursor), and runs the repo's setup script
+   if it hasn't run yet.
+3. Prefer to stay in the current shell? `tw gould` cd's you there
+   instead. Want the dev server running too? `twig gould --run`.
+4. Done with that branch? `twig rm gould` removes the worktree and keeps
+   the branch.
 
 ## Where worktrees hide
 

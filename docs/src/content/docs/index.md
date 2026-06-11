@@ -8,20 +8,23 @@ created by AI coding tools like Claude Code, Codex, and Conductor.
 
 The main idea: while you're in, say, the Claude Code or Codex UI, you glance
 at the worktree or branch name (`claude/xenodochial-gould-7bf514`) and note
-some memorable part of it (`gould`). One command then does the rest. It
-finds where that directory actually lives on your machine, opens a terminal
-there (or cd's your current shell), and runs the repo's optional setup and
-run commands:
+some memorable part of it (`gould`). One command then does the rest:
 
-```sh
-twig gould
-# → opens Ghostty in ~/Code/fabricahq/app/.claude/worktrees/xenodochial-gould-7bf514,
-#   with the repo's setup script already run
-```
+![Spotting the branch name in a Claude Code session, then opening that worktree locally with twig](../../assets/claude-code-to-twig.png)
 
-twig can also open other tools in that working directory at the same time:
-Cursor, VS Code, a browser tab pointed at your dev server, whatever set of
-openers you configure.
+## How to use it
+
+1. An agent finishes some work. Glance at its branch or worktree name in
+   the agent's UI and keep any memorable part: here, `gould`.
+2. In any terminal, type `twig gould`. twig finds where that worktree
+   lives on disk, opens a terminal there (plus any other
+   [openers](/twig/guides/openers/) you configured, like Cursor or a
+   browser tab on your dev server), and runs the repo's
+   [setup script](/twig/guides/setup-scripts/) if it hasn't run yet.
+3. Prefer to stay in the current shell? `tw gould` cd's you there
+   instead. Want the dev server running too? `twig gould --run`.
+4. Done with that branch? `twig rm gould` removes the worktree and keeps
+   the branch.
 
 ## The problem
 
