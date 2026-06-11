@@ -75,7 +75,10 @@ func runInitWizard(force bool) error {
 		_, _ = ui.ReadLine("\nPress ENTER to continue ")
 	}
 
-	editors := chooseEditors()
+	editors, err := chooseEditors()
+	if err != nil {
+		return err
+	}
 
 	content := initwiz.Generate(home, initwiz.Answers{Roots: roots, Editors: editors})
 	ui.Infof("\nThis will be written to %s:\n", cfgPath)
@@ -158,29 +161,29 @@ func reportDetectedTools(home string, chosen []initwiz.RootCandidate) bool {
 	if len(lines) == 0 {
 		return false
 	}
-	ui.Infof("\nI detected the following tools. Here's where twig will look for their worktrees:")
+	ui.Infof("\nI detected the following tools. In addition to the above paths, twig")
+	ui.Infof("will also look for git worktrees in the following paths:")
 	for _, line := range lines {
 		ui.Infof("%s", line)
 	}
 	return true
 }
 
-// chooseEditors asks per detected editor under one lead question;
-// declining everything is fine.
-func chooseEditors() []initwiz.Editor {
+// chooseEditors multi-selects among detected editors with the same
+// checklist UX as the roots step; selecting none is fine (a terminal
+// still opens via the default ghostty opener).
+func chooseEditors() ([]initwiz.Editor, error) {
 	editors := initwiz.DetectEditors()
 	if len(editors) == 0 {
-		return nil
+		return nil, nil
 	}
-	ui.Infof("\nWhich tools should I automatically open when you enter a worktree?")
-	var chosen []initwiz.Editor
-	for _, e := range editors {
-		yes, err := ui.ConfirmYN(fmt.Sprintf("Open %s?", e.DisplayName), false)
-		if err == nil && yes {
-			chosen = append(chosen, e)
-		}
-	}
-	return chosen
+	ui.Infof("")
+	return pick.Checklist(
+		"Which tools should I automatically open when you enter a worktree?",
+		editors,
+		func(e initwiz.Editor) string { return e.DisplayName },
+		nil,
+	)
 }
 
 // offerShellInit explains what the tw function buys, then offers to
