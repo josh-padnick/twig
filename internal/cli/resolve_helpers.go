@@ -4,13 +4,24 @@ package cli
 import (
 	"os"
 
+	"github.com/josh-padnick/twig/internal/config"
 	"github.com/josh-padnick/twig/internal/pick"
 	"github.com/josh-padnick/twig/internal/resolve"
+	"github.com/josh-padnick/twig/internal/ui"
 )
 
-// newResolver constructs the resolver for the invoking process. Roots and
-// provider selection come from user config starting in M2; until then all
-// builtin providers are active and no custom roots exist.
+// loadConfig reads the user config, surfacing warnings on stderr so typos
+// in config.toml are visible instead of silently doing nothing.
+func loadConfig() (config.Config, error) {
+	cfg, warnings, err := config.Load()
+	for _, w := range warnings {
+		ui.Warnf("%s", w)
+	}
+	return cfg, err
+}
+
+// newResolver constructs the resolver for the invoking process from the
+// user config: expanded roots and the selected providers.
 func newResolver() (*resolve.Resolver, error) {
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -20,7 +31,16 @@ func newResolver() (*resolve.Resolver, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &resolve.Resolver{Cwd: cwd, Home: home, Providers: resolve.Builtin}, nil
+	cfg, err := loadConfig()
+	if err != nil {
+		return nil, err
+	}
+	return &resolve.Resolver{
+		Cwd:       cwd,
+		Home:      home,
+		Roots:     cfg.ExpandedRoots(home),
+		Providers: resolve.ByNames(cfg.Providers),
+	}, nil
 }
 
 // resolveFragment resolves frag (possibly empty) to exactly one worktree,

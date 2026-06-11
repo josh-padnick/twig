@@ -3,6 +3,7 @@ module github.com/josh-padnick/twig
 go 1.26.3
 
 require (
+	github.com/BurntSushi/toml v1.6.0
 	github.com/ktr0731/go-fuzzyfinder v0.9.0
 	github.com/spf13/cobra v1.10.2
 	golang.org/x/term v0.44.0

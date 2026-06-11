@@ -52,6 +52,6 @@ func newRootCmd(version, commit string) *cobra.Command {
 			return fmt.Errorf("opening worktrees lands in M4 — until then: cd \"$(twig cd %s)\"", args[0])
 		},
 	}
-	root.AddCommand(newCdCmd(), newListCmd())
+	root.AddCommand(newCdCmd(), newListCmd(), newTrustCmd())
 	return root
 }

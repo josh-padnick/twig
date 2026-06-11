@@ -10,8 +10,18 @@ import (
 	"github.com/josh-padnick/twig/internal/testutil"
 )
 
+// isolate keeps CLI tests hermetic: config and home point into the fixture
+// so the real ~/.config/twig and ~/conductor never leak in.
+func isolate(t *testing.T, f *testutil.Fixture) {
+	t.Helper()
+	t.Setenv("HOME", f.Home)
+	t.Setenv("XDG_CONFIG_HOME", f.Home+"/.config")
+	t.Setenv("XDG_DATA_HOME", f.Home+"/.local/share")
+}
+
 func TestCdPrintsExactlyThePath(t *testing.T) {
 	f := testutil.StandardFixture(t)
+	isolate(t, f)
 	t.Chdir(f.App)
 
 	root := newRootCmd("test", "test")
@@ -29,6 +39,7 @@ func TestCdPrintsExactlyThePath(t *testing.T) {
 
 func TestCdNoMatchWritesNothingToStdout(t *testing.T) {
 	f := testutil.StandardFixture(t)
+	isolate(t, f)
 	t.Chdir(f.Tmp)
 
 	root := newRootCmd("test", "test")

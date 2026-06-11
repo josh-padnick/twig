@@ -44,6 +44,11 @@ var Builtin = []Provider{
 	},
 }
 
+// BuiltinNames returns the names of all builtin providers, in order.
+func BuiltinNames() []string {
+	return providerNames(Builtin)
+}
+
 // ByNames returns the builtin providers with the given names, preserving
 // Builtin's order and silently skipping unknown names (config validation
 // warns about those separately).
