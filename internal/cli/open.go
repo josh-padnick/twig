@@ -25,6 +25,7 @@ type openFlags struct {
 	runAfter   bool
 	forceSetup bool
 	noSetup    bool
+	remote     bool
 	with       []string
 }
 
@@ -33,6 +34,7 @@ func addOpenFlags(cmd *cobra.Command, f *openFlags) {
 	cmd.Flags().BoolVar(&f.runAfter, "run", false, "run the [run] script after setup succeeds")
 	cmd.Flags().BoolVar(&f.forceSetup, "setup", false, "force the setup script to re-run")
 	cmd.Flags().BoolVar(&f.noSetup, "no-setup", false, "skip setup entirely")
+	cmd.Flags().BoolVarP(&f.remote, "remote", "r", false, "search remote branches when nothing matches locally")
 	cmd.Flags().StringSliceVar(&f.with, "with", nil, "openers to run (overrides the configured set)")
 	cmd.MarkFlagsMutuallyExclusive("setup", "no-setup")
 }
@@ -58,7 +60,7 @@ func newOpenCmd() *cobra.Command {
 // runOpen is the shared implementation behind `twig open` and bare
 // `twig <fragment>`.
 func runOpen(frag string, f openFlags) error {
-	c, err := resolveFragment(frag)
+	c, err := resolveFragmentOrRemote(frag, f.remote)
 	if err != nil {
 		return err
 	}

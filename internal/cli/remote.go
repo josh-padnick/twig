@@ -1,0 +1,84 @@
+// Remote-branch pickup glue: when local resolution finds nothing and the
+// user opted in (-r or remote.auto), search the remotes of repos already on
+// disk, confirm, then fetch and create the worktree so the normal open or
+// cd flow can continue as if it had always existed locally.
+package cli
+
+import (
+	"errors"
+	"fmt"
+	"os"
+
+	"github.com/josh-padnick/twig/internal/pick"
+	"github.com/josh-padnick/twig/internal/remote"
+	"github.com/josh-padnick/twig/internal/resolve"
+	"github.com/josh-padnick/twig/internal/ui"
+)
+
+// resolveFragmentOrRemote resolves locally first; on a clean no-match it
+// optionally falls through to remote pickup. Every other error (ambiguity,
+// stale records, git failures) passes through untouched.
+func resolveFragmentOrRemote(frag string, remoteFlag bool) (resolve.Candidate, error) {
+	c, err := resolveFragment(frag)
+	var noMatch *resolve.NoMatchError
+	if err == nil || !errors.As(err, &noMatch) {
+		return c, err
+	}
+	cfg, cfgErr := loadConfig()
+	if cfgErr != nil {
+		return c, err
+	}
+	if !remoteFlag && !cfg.Remote.Auto {
+		return c, err
+	}
+	return pickupRemote(frag, err)
+}
+
+// pickupRemote runs the search → pick → confirm → fetch+worktree sequence.
+// noMatchErr is the local resolution error, returned when remote search
+// comes up empty too.
+func pickupRemote(frag string, noMatchErr error) (resolve.Candidate, error) {
+	var zero resolve.Candidate
+	cfg, err := loadConfig()
+	if err != nil {
+		return zero, err
+	}
+	cwd, err := os.Getwd()
+	if err != nil {
+		return zero, err
+	}
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return zero, err
+	}
+
+	repos := remote.CandidateRepos(cwd, cfg.ExpandedRoots(home))
+	if len(repos) == 0 {
+		return zero, noMatchErr
+	}
+	ui.Infof("twig: no local match — searching remote branches of %d repo(s)…", len(repos))
+	matches := remote.Search(frag, repos)
+	if len(matches) == 0 {
+		return zero, fmt.Errorf("%v; remote branches had no match either", noMatchErr)
+	}
+
+	m, err := pick.OneOf(matches, remote.DisplayMatch)
+	if err != nil {
+		return zero, err
+	}
+	yes, err := ui.ConfirmYN(
+		fmt.Sprintf("branch %s found on %s of %s — fetch it and create a worktree?", m.Branch, m.Remote, m.RepoDir), true)
+	if err != nil {
+		return zero, fmt.Errorf("remote pickup needs a terminal to confirm: %w", err)
+	}
+	if !yes {
+		return zero, errors.New("cancelled")
+	}
+
+	path, err := remote.CreateWorktree(m, cfg.Remote.Dir)
+	if err != nil {
+		return zero, err
+	}
+	ui.Infof("twig: created worktree %s (branch %s)", path, m.Branch)
+	return resolve.Candidate{Path: path, Branch: m.Branch, Source: resolve.SourceRemote}, nil
+}

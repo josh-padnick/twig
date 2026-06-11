@@ -69,6 +69,62 @@ func CurrentBranch(dir string) (string, error) {
 	return out, nil
 }
 
+// Remotes lists the repo's remote names.
+func Remotes(repoDir string) ([]string, error) {
+	out, err := run(repoDir, "remote")
+	if err != nil {
+		return nil, err
+	}
+	if out == "" {
+		return nil, nil
+	}
+	return strings.Split(out, "\n"), nil
+}
+
+// LsRemoteHeads lists short branch names on the named remote. This is a
+// network call (or a filesystem read for path remotes).
+func LsRemoteHeads(repoDir, remote string) ([]string, error) {
+	out, err := run(repoDir, "ls-remote", "--heads", remote)
+	if err != nil {
+		return nil, err
+	}
+	var branches []string
+	for _, line := range strings.Split(out, "\n") {
+		// Lines look like "<sha>\trefs/heads/<branch>".
+		if _, ref, ok := strings.Cut(line, "\t"); ok {
+			if branch, ok := strings.CutPrefix(ref, "refs/heads/"); ok {
+				branches = append(branches, branch)
+			}
+		}
+	}
+	return branches, nil
+}
+
+// Fetch fetches one branch from the named remote.
+func Fetch(repoDir, remote, branch string) error {
+	_, err := run(repoDir, "fetch", remote, branch)
+	return err
+}
+
+// BranchExists reports whether a local branch exists.
+func BranchExists(repoDir, branch string) bool {
+	_, err := run(repoDir, "rev-parse", "--verify", "--quiet", "refs/heads/"+branch)
+	return err == nil
+}
+
+// AddWorktree checks out an existing local branch as a worktree at path.
+func AddWorktree(repoDir, path, branch string) error {
+	_, err := run(repoDir, "worktree", "add", path, branch)
+	return err
+}
+
+// AddWorktreeTracking creates local branch from remote/branch and checks it
+// out as a worktree at path, with upstream tracking set.
+func AddWorktreeTracking(repoDir, path, branch, remote string) error {
+	_, err := run(repoDir, "worktree", "add", "--track", "-b", branch, path, remote+"/"+branch)
+	return err
+}
+
 // RemoveWorktree removes the worktree at path, invoked from repoDir (any
 // worktree of the same repo). force removes even with uncommitted changes.
 func RemoveWorktree(repoDir, path string, force bool) error {

@@ -18,40 +18,50 @@ import (
 // ErrCancelled is returned when the user aborts the picker (Esc/Ctrl-C).
 var ErrCancelled = errors.New("cancelled")
 
-// NoTTYError reports an ambiguous resolution in a non-interactive context,
-// carrying the candidates so the error message can enumerate them.
+// NoTTYError reports an ambiguous choice in a non-interactive context,
+// carrying rendered lines so the error message can enumerate the options.
 type NoTTYError struct {
-	Candidates []resolve.Candidate
+	Lines []string
 }
 
 func (e *NoTTYError) Error() string {
 	var b strings.Builder
-	fmt.Fprintf(&b, "%d worktrees match and no terminal is available to pick one:", len(e.Candidates))
-	for _, c := range e.Candidates {
-		fmt.Fprintf(&b, "\n  %s", Display(c))
+	fmt.Fprintf(&b, "%d matches and no terminal is available to pick one:", len(e.Lines))
+	for _, line := range e.Lines {
+		fmt.Fprintf(&b, "\n  %s", line)
 	}
 	return b.String()
 }
 
-// One returns the only candidate, or runs the fuzzy picker over several.
-func One(cands []resolve.Candidate) (resolve.Candidate, error) {
-	switch len(cands) {
+// OneOf returns the only item, or runs the fuzzy picker over several.
+func OneOf[T any](items []T, display func(T) string) (T, error) {
+	var zero T
+	switch len(items) {
 	case 0:
-		return resolve.Candidate{}, errors.New("no candidates to pick from")
+		return zero, errors.New("no candidates to pick from")
 	case 1:
-		return cands[0], nil
+		return items[0], nil
 	}
 	if !hasTTY() {
-		return resolve.Candidate{}, &NoTTYError{Candidates: cands}
+		lines := make([]string, len(items))
+		for i, it := range items {
+			lines[i] = display(it)
+		}
+		return zero, &NoTTYError{Lines: lines}
 	}
-	idx, err := fuzzyfinder.Find(cands, func(i int) string { return Display(cands[i]) })
+	idx, err := fuzzyfinder.Find(items, func(i int) string { return display(items[i]) })
 	if err != nil {
 		if errors.Is(err, fuzzyfinder.ErrAbort) {
-			return resolve.Candidate{}, ErrCancelled
+			return zero, ErrCancelled
 		}
-		return resolve.Candidate{}, fmt.Errorf("picker: %w", err)
+		return zero, fmt.Errorf("picker: %w", err)
 	}
-	return cands[idx], nil
+	return items[idx], nil
+}
+
+// One picks among worktree candidates.
+func One(cands []resolve.Candidate) (resolve.Candidate, error) {
+	return OneOf(cands, Display)
 }
 
 // Display renders a candidate as "path  [branch]", shortening the home

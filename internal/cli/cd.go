@@ -10,7 +10,7 @@ import (
 )
 
 func newCdCmd() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "cd [fragment]",
 		Short: "Resolve a fragment and print the worktree path",
 		Long: "Resolves a fragment to a worktree directory and prints the path on stdout.\n" +
@@ -22,7 +22,8 @@ func newCdCmd() *cobra.Command {
 			if len(args) == 1 {
 				frag = args[0]
 			}
-			c, err := resolveFragment(frag)
+			remoteFlag, _ := cmd.Flags().GetBool("remote")
+			c, err := resolveFragmentOrRemote(frag, remoteFlag)
 			if err != nil {
 				return err
 			}
@@ -30,4 +31,6 @@ func newCdCmd() *cobra.Command {
 			return nil
 		},
 	}
+	cmd.Flags().BoolP("remote", "r", false, "search remote branches when nothing matches locally")
+	return cmd
 }

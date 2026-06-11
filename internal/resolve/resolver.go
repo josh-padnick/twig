@@ -23,6 +23,7 @@ const (
 	SourceLiteral Source = iota // the fragment was an existing directory path
 	SourceGit                   // matched via `git worktree list` of the current repo
 	SourceScan                  // matched by scanning provider locations and roots
+	SourceRemote                // worktree created by remote-branch pickup
 )
 
 // Tier ranks how a candidate matched; lower is stronger. Exact tiers
@@ -205,23 +206,41 @@ func (r *Resolver) viaGit(frag string) (res Result, matched bool, err error) {
 	return Result{}, false, nil
 }
 
-// gitTier scores one worktree against the fragment; all comparisons are
-// case-insensitive. Branch tiers outrank directory tiers so git's own
-// branch names stay authoritative.
-func gitTier(frag string, wt gitx.Worktree) Tier {
+// BranchTier scores a branch name against a fragment using the branch
+// tiers only — shared by the git resolution step and remote-branch pickup.
+// All comparisons are case-insensitive.
+func BranchTier(frag, branch string) (Tier, bool) {
+	if branch == "" {
+		return tierNone, false
+	}
 	f := strings.ToLower(frag)
 	s := lastSegment(f)
-	branch := strings.ToLower(wt.Branch)
-	base := strings.ToLower(filepath.Base(wt.Path))
+	b := strings.ToLower(branch)
 	switch {
-	case branch != "" && branch == f:
+	case b == f:
+		return TierExactBranch, true
+	case lastSegment(b) == s:
+		return TierBranchSuffix, true
+	case strings.Contains(b, s) || strings.Contains(b, f):
+		return TierBranchSubstr, true
+	}
+	return tierNone, false
+}
+
+// gitTier scores one worktree against the fragment. Branch tiers outrank
+// directory tiers so git's own branch names stay authoritative, except an
+// exact directory-name match beats inexact branch matches.
+func gitTier(frag string, wt gitx.Worktree) Tier {
+	s := lastSegment(strings.ToLower(frag))
+	base := strings.ToLower(filepath.Base(wt.Path))
+	branchTier, branchOK := BranchTier(frag, wt.Branch)
+	switch {
+	case branchOK && branchTier == TierExactBranch:
 		return TierExactBranch
 	case base == s:
 		return TierExactDir
-	case branch != "" && lastSegment(branch) == s:
-		return TierBranchSuffix
-	case branch != "" && (strings.Contains(branch, s) || strings.Contains(branch, f)):
-		return TierBranchSubstr
+	case branchOK:
+		return branchTier
 	case strings.Contains(base, s):
 		return TierDirSubstr
 	}
