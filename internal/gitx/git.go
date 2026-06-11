@@ -69,6 +69,29 @@ func CurrentBranch(dir string) (string, error) {
 	return out, nil
 }
 
+// RemoveWorktree removes the worktree at path, invoked from repoDir (any
+// worktree of the same repo). force removes even with uncommitted changes.
+func RemoveWorktree(repoDir, path string, force bool) error {
+	args := []string{"worktree", "remove"}
+	if force {
+		args = append(args, "--force")
+	}
+	args = append(args, path)
+	_, err := run(repoDir, args...)
+	return err
+}
+
+// Prune drops worktree records whose directories are gone.
+func Prune(repoDir string) error {
+	_, err := run(repoDir, "worktree", "prune")
+	return err
+}
+
+// Version returns the git version string, for doctor.
+func Version() (string, error) {
+	return run("", "version")
+}
+
 // IsDirty reports whether the worktree at dir has uncommitted changes
 // (staged, unstaged, or untracked).
 func IsDirty(dir string) (bool, error) {

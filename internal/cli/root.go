@@ -6,9 +6,11 @@ package cli
 import (
 	"errors"
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 
+	"github.com/josh-padnick/twig/internal/gitx"
 	"github.com/josh-padnick/twig/internal/setup"
 	"github.com/josh-padnick/twig/internal/ui"
 )
@@ -44,25 +46,35 @@ var errAlreadyReported = errors.New("already reported")
 
 // newRootCmd builds the root `twig` command. With a fragment argument it
 // behaves like `twig open <fragment>`; with none, inside a repo, it offers a
-// picker over that repo's worktrees (gw parity).
+// picker over that repo's worktrees (gw parity), and outside one it shows
+// help.
 func newRootCmd(version, commit string) *cobra.Command {
+	var f openFlags
 	root := &cobra.Command{
 		Use:   "twig [fragment]",
 		Short: "Git worktrees, one short command away",
 		Long: "twig resolves a fragment — a branch name, branch suffix, directory slug,\n" +
 			"or literal path — to a git worktree and enters it: opening your terminal\n" +
-			"or editor there and running the worktree's trust-gated setup script.",
+			"or editor there and running the worktree's trust-gated setup script.\n" +
+			"A fragment that collides with a subcommand name: use `twig open <fragment>`.",
 		Version:       fmt.Sprintf("%s (commit %s)", version, commit),
 		Args:          cobra.ArbitraryArgs,
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 1 {
+				return fmt.Errorf("expected one fragment, got %d arguments", len(args))
+			}
 			if len(args) == 0 {
+				if cwd, err := os.Getwd(); err == nil && gitx.InRepo(cwd) {
+					return runOpen("", f)
+				}
 				return cmd.Help()
 			}
-			return fmt.Errorf("opening worktrees lands in M4 — until then: cd \"$(twig cd %s)\"", args[0])
+			return runOpen(args[0], f)
 		},
 	}
-	root.AddCommand(newCdCmd(), newListCmd(), newTrustCmd(), newEnterCmd())
+	addOpenFlags(root, &f)
+	root.AddCommand(newCdCmd(), newListCmd(), newTrustCmd(), newEnterCmd(), newOpenCmd(), newRmCmd(), newDoctorCmd())
 	return root
 }

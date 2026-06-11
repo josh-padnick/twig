@@ -63,7 +63,7 @@ func (e *Engine) Enter(opts EnterOptions) error {
 		ui.Warnf("%s", w)
 	}
 
-	if err := e.ensureTrusted(ld, opts.Dir); err != nil {
+	if err := e.EnsureTrusted(ld, opts.Dir); err != nil {
 		return err
 	}
 
@@ -87,9 +87,11 @@ func (e *Engine) Enter(opts EnterOptions) error {
 	return nil
 }
 
-// ensureTrusted enforces the direnv-style gate: show the manifest, prompt
+// EnsureTrusted enforces the direnv-style gate: show the manifest, prompt
 // when interactive, otherwise fail with the twig trust instruction.
-func (e *Engine) ensureTrusted(ld *Loaded, dir string) error {
+// Exported because `twig open` settles trust up front in the invoking
+// terminal, before any window opens or repo [open] overrides are read.
+func (e *Engine) EnsureTrusted(ld *Loaded, dir string) error {
 	ok, err := e.Trust.Check(ld.Path, ld.Content)
 	if err != nil {
 		return err
