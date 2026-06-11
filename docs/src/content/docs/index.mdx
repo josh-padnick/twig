@@ -1,0 +1,42 @@
+---
+title: twig
+description: Git worktrees, one short command away.
+template: splash
+hero:
+  tagline: >
+    Type a branch name, a slug, or any fragment of either — twig finds the
+    worktree and opens it in your terminal, your editor, or both, with the
+    repo's setup script already run.
+  actions:
+    - text: Quickstart
+      link: /twig/getting-started/quickstart/
+      icon: right-arrow
+    - text: GitHub
+      link: https://github.com/josh-padnick/twig
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+<CardGrid stagger>
+  <Card title="Fragment resolution" icon="magnifier">
+    `twig matsumoto` finds `claude/competent-matsumoto-493452` wherever it
+    lives — exact matches beat substrings, branches beat directory names,
+    and ambiguity gets a fuzzy picker.
+  </Card>
+  <Card title="Agent-tool aware" icon="puzzle">
+    Claude Code desktop worktrees, Conductor workspaces, and cloud-session
+    branches that only exist on GitHub are all reachable with zero
+    configuration.
+  </Card>
+  <Card title="Trust-gated setup" icon="seti:lock">
+    A `twig.toml` in the repo declares setup and run scripts. twig refuses
+    to execute any manifest you haven't approved — and any edit requires
+    re-approval, direnv-style.
+  </Card>
+  <Card title="Openers" icon="rocket">
+    Entering a worktree can open Ghostty, Cursor, a browser tab — any set
+    of tools you configure, with per-repo overrides.
+  </Card>
+</CardGrid>
