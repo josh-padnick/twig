@@ -105,7 +105,7 @@ func TestGhosttyEntersCurrentTabAndFolds(t *testing.T) {
 	// Folded launches land between the cd and the entry command, in order.
 	g.inside = func() bool { return true }
 	line, inject := g.entryLine(Target{Dir: "/code/other", EnterCmd: "twig enter", Fold: []string{"cursor '/code/other'"}})
-	if !inject || line != "cd '/code/other' && cursor '/code/other' && twig enter" {
+	if !inject || line != "cd '/code/other' && { cursor '/code/other'; twig enter; }" {
 		t.Errorf("folded current-tab line = %q inject=%v", line, inject)
 	}
 }
@@ -126,6 +126,9 @@ func TestGhosttyReuseSkipsSelfCd(t *testing.T) {
 	// Already there but with setup/run to do: inject just the enter command.
 	if line, inject := g.entryLine(Target{Dir: cwd, EnterCmd: "twig enter"}); !inject || line != "twig enter" {
 		t.Errorf("same-dir reuse with enter: line=%q inject=%v, want just the enter command", line, inject)
+	}
+	if line, inject := g.entryLine(Target{Dir: cwd, EnterCmd: "twig enter", Fold: []string{"cursor " + Quote(cwd)}}); !inject || line != "cursor "+Quote(cwd)+"; twig enter" {
+		t.Errorf("same-dir reuse with folded opener: line=%q inject=%v", line, inject)
 	}
 	// A different worktree still cds.
 	if line, inject := g.entryLine(Target{Dir: cwd + "/elsewhere"}); !inject || !strings.Contains(line, "cd ") {

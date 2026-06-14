@@ -124,8 +124,12 @@ func CreateWorktree(m Match, dirTemplate string) (path string, reused bool, err 
 	// branch was picked up earlier, possibly from a different directory.
 	// `git worktree add` would refuse a second worktree for it; reuse the
 	// existing one instead of failing.
-	if existing, ok := ExistingCheckout(m); ok {
+	if existing, ok, stale := existingCheckout(m); ok {
 		return existing, true, nil
+	} else if stale {
+		if err := gitx.Prune(m.RepoDir); err != nil {
+			return "", false, err
+		}
 	}
 
 	wts, err := gitx.Worktrees(m.RepoDir)
@@ -163,16 +167,34 @@ func CreateWorktree(m Match, dirTemplate string) (path string, reused bool, err 
 // per branch, so when this hits there is nothing to fetch or create — the
 // caller can enter the returned path directly, no confirmation needed.
 func ExistingCheckout(m Match) (string, bool) {
+	path, ok, _ := existingCheckout(m)
+	return path, ok
+}
+
+func existingCheckout(m Match) (path string, ok bool, stale bool) {
 	wts, err := gitx.Worktrees(m.RepoDir)
 	if err != nil {
-		return "", false
+		return "", false, false
 	}
 	for _, wt := range wts {
-		if wt.Branch != "" && wt.Branch == m.Branch {
-			return wt.Path, true
+		if wt.Branch == "" || wt.Branch != m.Branch {
+			continue
 		}
+		if staleWorktree(wt) {
+			stale = true
+			continue
+		}
+		return wt.Path, true, stale
 	}
-	return "", false
+	return "", false, stale
+}
+
+func staleWorktree(wt gitx.Worktree) bool {
+	if wt.Prunable {
+		return true
+	}
+	fi, err := os.Stat(wt.Path)
+	return err != nil || !fi.IsDir()
 }
 
 func hasGit(dir string) bool {

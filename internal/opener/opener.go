@@ -29,8 +29,8 @@ type Target struct {
 	EnterCmd string // twig-enter command to run in the shell, "" for none
 	Mode     TargetMode
 	// Fold holds other openers' launch commands to run after the cd and
-	// before the entry command — set only when a current-tab terminal hosts
-	// them, so the kept session runs cd → launches → enter in order.
+	// before the entry command. Folded launches are best-effort so they cannot
+	// prevent setup or --run from executing in the terminal.
 	Fold []string
 }
 
@@ -76,19 +76,36 @@ func FromConfig(name string, oc config.Open) (Opener, error) {
 	}
 }
 
-// EntryLine composes the shell line a terminal opener types on entry: cd
-// into the worktree, optionally clear (gw parity), then any folded opener
-// launches, then twig enter — so a hosted set runs cd-first, in order.
+// EntryLine composes the shell line a terminal opener types on entry: cd into
+// the worktree, optionally clear (gw parity), then any folded opener launches,
+// then twig enter. The cd/clear steps gate the rest; folded launch failures do
+// not stop the entry command.
 func EntryLine(t Target, clear bool) string {
 	parts := []string{"cd " + Quote(t.Dir)}
 	if clear {
 		parts = append(parts, "clear")
 	}
-	parts = append(parts, t.Fold...)
+	return joinEntryLine(parts, t)
+}
+
+func joinEntryLine(gated []string, t Target) string {
+	tail := append([]string{}, t.Fold...)
 	if t.EnterCmd != "" {
-		parts = append(parts, t.EnterCmd)
+		tail = append(tail, t.EnterCmd)
 	}
-	return strings.Join(parts, " && ")
+	if len(t.Fold) == 0 {
+		parts := append([]string{}, gated...)
+		parts = append(parts, tail...)
+		return strings.Join(parts, " && ")
+	}
+	tailLine := strings.Join(tail, "; ")
+	if len(gated) == 0 {
+		return tailLine
+	}
+	if tailLine == "" {
+		return strings.Join(gated, " && ")
+	}
+	return strings.Join(gated, " && ") + " && { " + tailLine + "; }"
 }
 
 // SameDir reports whether target is the directory twig is running in,

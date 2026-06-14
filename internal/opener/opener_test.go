@@ -34,7 +34,7 @@ func TestEntryLine(t *testing.T) {
 	}
 	// Folded launches run after the cd and before the entry command.
 	folded := EntryLine(Target{Dir: "/code/app", EnterCmd: "twig enter", Fold: []string{"cursor '/code/app'"}}, false)
-	if folded != "cd '/code/app' && cursor '/code/app' && twig enter" {
+	if folded != "cd '/code/app' && { cursor '/code/app'; twig enter; }" {
 		t.Errorf("EntryLine folded = %q", folded)
 	}
 }

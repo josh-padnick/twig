@@ -132,6 +132,34 @@ func TestCreateWorktreeReusesExistingCheckout(t *testing.T) {
 	}
 }
 
+func TestCreateWorktreeRecreatesStaleExistingCheckout(t *testing.T) {
+	f := newCloudFixture(t, "claude/stale-out-1a2b3c")
+	m := Search("stale-out", []string{f.clone})[0]
+
+	first, reused, err := CreateWorktree(m, filepath.Join("wt", "{{slug}}"))
+	if err != nil || reused {
+		t.Fatalf("first create: path=%s reused=%v err=%v", first, reused, err)
+	}
+	if err := os.RemoveAll(first); err != nil {
+		t.Fatal(err)
+	}
+	if path, ok := ExistingCheckout(m); ok {
+		t.Fatalf("ExistingCheckout = %s, true; want stale record skipped", path)
+	}
+
+	again, reused, err := CreateWorktree(m, filepath.Join("fresh", "{{slug}}"))
+	if err != nil || reused {
+		t.Fatalf("recreate: path=%s reused=%v err=%v", again, reused, err)
+	}
+	want := filepath.Join(f.clone, "fresh", "stale-out-1a2b3c")
+	if again != want {
+		t.Errorf("path = %s, want %s", again, want)
+	}
+	if branch, _ := gitx.CurrentBranch(again); branch != "claude/stale-out-1a2b3c" {
+		t.Errorf("branch = %q", branch)
+	}
+}
+
 func TestCreateWorktreeWithExistingLocalBranch(t *testing.T) {
 	f := newCloudFixture(t, "feat/local-already")
 	// The branch already exists locally (e.g. its worktree was removed).

@@ -49,7 +49,7 @@ type Opener struct {
 
 // Remote configures remote-branch pickup for cloud sessions.
 type Remote struct {
-	Auto               bool   `toml:"auto"`                 // search remotes on every local miss (no -r needed)
+	AutoInclude        bool   `toml:"auto_include"`         // include remote branches in the search on every local miss (no -r needed)
 	ConfirmBeforeFetch *bool  `toml:"confirm_before_fetch"` // prompt before fetching a matched branch (default true); false = fetch without asking
 	Dir                string `toml:"dir"`                  // worktree location template relative to the main repo root
 }

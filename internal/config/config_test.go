@@ -111,7 +111,7 @@ delay_ms = 500
 reuse_window = true
 
 [remote]
-auto = true
+auto_include = true
 confirm_before_fetch = false
 dir = "wt/{{slug}}"
 `))
@@ -126,7 +126,7 @@ dir = "wt/{{slug}}"
 	if gh.Clear == nil || *gh.Clear || gh.DelayMs == nil || *gh.DelayMs != 500 || !gh.ReuseWindow {
 		t.Errorf("ghostty opener = %+v", gh)
 	}
-	if !cfg.Remote.Auto || cfg.RemoteConfirmBeforeFetch() || cfg.Remote.Dir != "wt/{{slug}}" {
+	if !cfg.Remote.AutoInclude || cfg.RemoteConfirmBeforeFetch() || cfg.Remote.Dir != "wt/{{slug}}" {
 		t.Errorf("remote = %+v", cfg.Remote)
 	}
 }

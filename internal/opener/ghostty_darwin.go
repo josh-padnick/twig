@@ -117,7 +117,7 @@ func (g *ghostty) entryLine(t Target) (line string, inject bool) {
 		if len(parts) == 0 {
 			return "", false
 		}
-		return strings.Join(parts, " && "), true
+		return joinEntryLine(nil, t), true
 	}
 	return EntryLine(t, g.clear && mode == ModeWindow), true
 }

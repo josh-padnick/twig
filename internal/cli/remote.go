@@ -29,7 +29,7 @@ func resolveFragmentOrRemote(frag string, remoteFlag bool) (resolve.Candidate, e
 	if cfgErr != nil {
 		return c, err
 	}
-	if !remoteFlag && !cfg.Remote.Auto {
+	if !remoteFlag && !cfg.Remote.AutoInclude {
 		return c, err
 	}
 	return pickupRemote(frag, err)

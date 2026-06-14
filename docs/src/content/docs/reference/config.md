@@ -39,7 +39,7 @@ reuse_window = false  # when already inside Ghostty, enter the current window
 #                                     #   (makes a terminal injection-capable)
 
 [remote]
-auto = false                          # search remotes on every local miss
+auto_include = false                  # include remotes in the search on every local miss
 confirm_before_fetch = true           # ask before fetching a match; set false
                                       # to fetch + create the worktree silently
 dir = ".claude/worktrees/{{slug}}"    # worktree location for fetched

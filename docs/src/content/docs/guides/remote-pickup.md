@@ -17,7 +17,7 @@ twig -r fix-login
 ## How it works
 
 1. Pickup runs only after local resolution finds nothing, and only with
-   `-r` or `auto = true`. Typos shouldn't hit the network.
+   `-r` or `auto_include = true`. Typos shouldn't hit the network.
 2. twig queries `git ls-remote --heads` against the remotes of repos
    already on disk: the current repo first, then repos directly under
    your `roots`. There's no GitHub API and no tokens involved, so it
@@ -47,7 +47,7 @@ twig -r fix-login
 ```toml
 # ~/.config/twig/config.toml
 [remote]
-auto = false                          # set true to search on every local miss
+auto_include = false                  # include remotes in the search on every local miss
 confirm_before_fetch = true           # set false to fetch + create the
                                       # worktree without the y/N prompt
 dir = ".claude/worktrees/{{slug}}"    # where fetched branches get worktrees,
@@ -57,14 +57,12 @@ dir = ".claude/worktrees/{{slug}}"    # where fetched branches get worktrees,
 `{{slug}}` is the branch's last path segment; `{{branch}}` is the full
 name with `/` replaced by `-`.
 
-The two flags are independent: `auto` controls *when* pickup runs (every
-local miss vs. only with `-r`), and `confirm_before_fetch` controls
-*whether it asks first*. For a fully hands-off `twig <fragment>` that
-picks up cloud branches with no flag and no prompt, set both:
+For a fully hands-off `twig <fragment>` that picks up cloud branches with
+no flag and no prompt, set both:
 
 ```toml
 [remote]
-auto = true
+auto_include = true
 confirm_before_fetch = false
 ```
 
