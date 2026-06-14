@@ -108,6 +108,7 @@ command = "cursor {{dir}}"
 kind = "ghostty"
 clear = false
 delay_ms = 500
+reuse_window = true
 
 [remote]
 auto = true
@@ -122,7 +123,7 @@ dir = "wt/{{slug}}"
 		t.Errorf("cursor opener = %+v", cursor)
 	}
 	gh := cfg.Open.Openers["ghostty"]
-	if gh.Clear == nil || *gh.Clear || gh.DelayMs == nil || *gh.DelayMs != 500 {
+	if gh.Clear == nil || *gh.Clear || gh.DelayMs == nil || *gh.DelayMs != 500 || !gh.ReuseWindow {
 		t.Errorf("ghostty opener = %+v", gh)
 	}
 	if !cfg.Remote.Auto || cfg.RemoteConfirmBeforeFetch() || cfg.Remote.Dir != "wt/{{slug}}" {

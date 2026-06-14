@@ -40,10 +40,11 @@ type Open struct {
 // built-in AppleScript launcher; kind "command" runs a template with
 // {{dir}} (and optionally {{cmd}} for injection-capable terminals).
 type Opener struct {
-	Kind    string `toml:"kind"`
-	Command string `toml:"command"`
-	Clear   *bool  `toml:"clear"`    // ghostty: inject `clear` after cd (default true)
-	DelayMs *int   `toml:"delay_ms"` // ghostty: delay before input text (default 300)
+	Kind        string `toml:"kind"`
+	Command     string `toml:"command"`
+	Clear       *bool  `toml:"clear"`        // ghostty: inject `clear` after cd (default true)
+	DelayMs     *int   `toml:"delay_ms"`     // ghostty: delay before input text (default 300)
+	ReuseWindow bool   `toml:"reuse_window"` // ghostty: when already inside Ghostty, enter the current window instead of opening a new one
 }
 
 // Remote configures remote-branch pickup for cloud sessions.

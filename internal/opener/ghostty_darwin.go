@@ -19,12 +19,16 @@ import (
 )
 
 type ghostty struct {
-	clear   bool
-	delayMs int
+	clear       bool
+	delayMs     int
+	reuseWindow bool
+	// inside reports whether twig is itself running inside Ghostty; a field
+	// so tests can drive the reuse logic without a real terminal.
+	inside func() bool
 }
 
 func newGhostty(spec config.Opener) Opener {
-	g := &ghostty{clear: true, delayMs: 300}
+	g := &ghostty{clear: true, delayMs: 300, reuseWindow: spec.ReuseWindow, inside: insideGhostty}
 	if spec.Clear != nil {
 		g.clear = *spec.Clear
 	}
@@ -32,6 +36,23 @@ func newGhostty(spec config.Opener) Opener {
 		g.delayMs = *spec.DelayMs
 	}
 	return g
+}
+
+// insideGhostty reports whether the current process is running in a Ghostty
+// terminal, via the environment Ghostty exports to its shells.
+func insideGhostty() bool {
+	return os.Getenv("TERM_PROGRAM") == "ghostty" || os.Getenv("GHOSTTY_RESOURCES_DIR") != ""
+}
+
+// modeFor resolves the effective target mode. With reuse_window set and twig
+// running inside Ghostty, a default (new-window) open becomes a current-tab
+// entry so the user stays in the session they're already in. An explicit
+// current-tab request (-t) and the not-in-Ghostty case both pass through.
+func (g *ghostty) modeFor(requested TargetMode) TargetMode {
+	if requested == ModeWindow && g.reuseWindow && g.inside() {
+		return ModeCurrentTab
+	}
+	return requested
 }
 
 func (g *ghostty) Name() string        { return "ghostty" }
@@ -71,7 +92,7 @@ func (g *ghostty) script(mode TargetMode) string {
 func (g *ghostty) Open(t Target) error {
 	line := EntryLine(t, g.clear)
 	cmd := exec.Command("osascript", "-", line)
-	cmd.Stdin = strings.NewReader(g.script(t.Mode))
+	cmd.Stdin = strings.NewReader(g.script(g.modeFor(t.Mode)))
 	cmd.Stdout = os.Stderr
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {

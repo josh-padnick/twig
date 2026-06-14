@@ -24,9 +24,11 @@ providers = ["conductor", "claude-code"]
 default = ["ghostty"]
 
 [open.openers.ghostty]
-kind = "ghostty"     # built-in kinds: ghostty | command
-clear = true         # inject `clear` after cd
-delay_ms = 300       # AppleScript delay before typing into the new window
+kind = "ghostty"      # built-in kinds: ghostty | command
+clear = true          # inject `clear` after cd
+delay_ms = 300        # AppleScript delay before typing into the new window
+reuse_window = false  # when already inside Ghostty, enter the current window
+                      # instead of opening a new one (same as a one-off -t)
 
 # Define any other tool as a command template:
 # [open.openers.cursor]
