@@ -50,8 +50,8 @@ func Generate(home string, a Answers) string {
 	b.WriteString("# kind = \"command\"\n")
 	b.WriteString("# command = \"open http://localhost:5173\"\n")
 	b.WriteString("\n# [remote]\n")
-	b.WriteString("# auto = true          # search remote branches automatically when nothing matches locally\n")
-	b.WriteString("# auto_create = true   # fetch + create (or reuse) the worktree without a prompt (implies auto)\n")
+	b.WriteString("# auto = true                    # search remote branches automatically when nothing matches locally\n")
+	b.WriteString("# confirm_before_fetch = false   # fetch + create (or reuse) the worktree without a prompt\n")
 	return b.String()
 }
 

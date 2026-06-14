@@ -48,8 +48,8 @@ twig -r fix-login
 # ~/.config/twig/config.toml
 [remote]
 auto = false                          # set true to search on every local miss
-auto_create = false                   # set true to skip the confirmation and
-                                      # fetch+create automatically (implies auto)
+confirm_before_fetch = true           # set false to fetch + create the
+                                      # worktree without the y/N prompt
 dir = ".claude/worktrees/{{slug}}"    # where fetched branches get worktrees,
                                       # relative to the repo's main worktree
 ```
@@ -57,10 +57,19 @@ dir = ".claude/worktrees/{{slug}}"    # where fetched branches get worktrees,
 `{{slug}}` is the branch's last path segment; `{{branch}}` is the full
 name with `/` replaced by `-`.
 
-With `auto_create = true` a bare `twig <fragment>` becomes fully
-hands-off: on a local miss it searches remotes and creates (or reuses)
-the worktree without prompting. Because it implies `auto`, you don't
-need `-r` or `auto` set separately.
+The two flags are independent: `auto` controls *when* pickup runs (every
+local miss vs. only with `-r`), and `confirm_before_fetch` controls
+*whether it asks first*. For a fully hands-off `twig <fragment>` that
+picks up cloud branches with no flag and no prompt, set both:
+
+```toml
+[remote]
+auto = true
+confirm_before_fetch = false
+```
+
+(An already-checked-out branch is entered directly regardless of either
+flag — there's nothing to fetch, so there's nothing to confirm.)
 
 ## Out of scope (for now)
 

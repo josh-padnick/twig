@@ -29,7 +29,7 @@ func resolveFragmentOrRemote(frag string, remoteFlag bool) (resolve.Candidate, e
 	if cfgErr != nil {
 		return c, err
 	}
-	if !remoteFlag && !cfg.Remote.Auto && !cfg.Remote.AutoCreate {
+	if !remoteFlag && !cfg.Remote.Auto {
 		return c, err
 	}
 	return pickupRemote(frag, err)
@@ -77,11 +77,9 @@ func pickupRemote(frag string, noMatchErr error) (resolve.Candidate, error) {
 		return resolve.Candidate{Path: path, Branch: m.Branch, Source: resolve.SourceRemote}, nil
 	}
 
-	// remote.auto_create skips the confirmation; otherwise ask before any
-	// fetch touches the network or disk.
-	if cfg.Remote.AutoCreate {
-		ui.Stepf("remote.auto_create is on — fetching without asking")
-	} else {
+	// Ask before any fetch touches the network or disk, unless the user
+	// turned the prompt off with remote.confirm_before_fetch = false.
+	if cfg.RemoteConfirmBeforeFetch() {
 		yes, err := ui.ConfirmYN(fmt.Sprintf("fetch %s and create a worktree?", m.Branch), true)
 		if err != nil {
 			return zero, fmt.Errorf("remote pickup needs a terminal to confirm: %w", err)
@@ -89,6 +87,8 @@ func pickupRemote(frag string, noMatchErr error) (resolve.Candidate, error) {
 		if !yes {
 			return zero, errors.New("cancelled")
 		}
+	} else {
+		ui.Stepf("confirm_before_fetch is off — fetching without asking")
 	}
 
 	path, reused, err := remote.CreateWorktree(m, cfg.Remote.Dir)

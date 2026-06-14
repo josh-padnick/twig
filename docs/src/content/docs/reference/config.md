@@ -37,8 +37,8 @@ delay_ms = 300       # AppleScript delay before typing into the new window
 
 [remote]
 auto = false                          # search remotes on every local miss
-auto_create = false                   # skip the fetch confirmation and create
-                                      # the worktree automatically; implies auto
+confirm_before_fetch = true           # ask before fetching a match; set false
+                                      # to fetch + create the worktree silently
 dir = ".claude/worktrees/{{slug}}"    # worktree location for fetched
                                       # branches, relative to the main
                                       # worktree; {{branch}} = name with /→-

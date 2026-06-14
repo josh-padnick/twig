@@ -48,9 +48,9 @@ type Opener struct {
 
 // Remote configures remote-branch pickup for cloud sessions.
 type Remote struct {
-	Auto       bool   `toml:"auto"`        // search remotes on every local miss (no -r needed)
-	AutoCreate bool   `toml:"auto_create"` // fetch and create the worktree without the y/N confirmation; implies Auto
-	Dir        string `toml:"dir"`         // worktree location template relative to the main repo root
+	Auto               bool   `toml:"auto"`                 // search remotes on every local miss (no -r needed)
+	ConfirmBeforeFetch *bool  `toml:"confirm_before_fetch"` // prompt before fetching a matched branch (default true); false = fetch without asking
+	Dir                string `toml:"dir"`                  // worktree location template relative to the main repo root
 }
 
 // Setup configures the on-entry setup behavior.
@@ -157,4 +157,11 @@ func (c Config) ExpandedRoots(home string) []string {
 // SetupAuto reports whether setup should run on entry (default true).
 func (c Config) SetupAuto() bool {
 	return c.Setup.Auto == nil || *c.Setup.Auto
+}
+
+// RemoteConfirmBeforeFetch reports whether remote pickup should ask before
+// fetching a matched branch (default true). Set it false to fetch and create
+// the worktree without a prompt.
+func (c Config) RemoteConfirmBeforeFetch() bool {
+	return c.Remote.ConfirmBeforeFetch == nil || *c.Remote.ConfirmBeforeFetch
 }
