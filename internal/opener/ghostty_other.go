@@ -16,9 +16,11 @@ type ghostty struct{}
 
 func newGhostty(config.Opener) Opener { return &ghostty{} }
 
-func (g *ghostty) Name() string        { return "ghostty" }
-func (g *ghostty) CanInject() bool     { return false }
-func (g *ghostty) CanCurrentTab() bool { return false }
+func (g *ghostty) Name() string                     { return "ghostty" }
+func (g *ghostty) CanInject() bool                  { return false }
+func (g *ghostty) CanCurrentTab() bool              { return false }
+func (g *ghostty) EntersCurrentTab(TargetMode) bool { return false }
+func (g *ghostty) LaunchCmd(Target) (string, bool)  { return "", false }
 
 func (g *ghostty) Available() error {
 	return fmt.Errorf("the built-in ghostty opener is macOS-only; define a command opener instead, e.g. command = \"ghostty -e bash -c {{cmd}}\"")

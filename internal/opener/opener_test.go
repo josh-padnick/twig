@@ -32,6 +32,27 @@ func TestEntryLine(t *testing.T) {
 	if got := EntryLine(Target{Dir: "/code/app"}, false); got != "cd '/code/app'" {
 		t.Errorf("EntryLine bare = %q", got)
 	}
+	// Folded launches run after the cd and before the entry command.
+	folded := EntryLine(Target{Dir: "/code/app", EnterCmd: "twig enter", Fold: []string{"cursor '/code/app'"}}, false)
+	if folded != "cd '/code/app' && cursor '/code/app' && twig enter" {
+		t.Errorf("EntryLine folded = %q", folded)
+	}
+}
+
+func TestCommandLaunchCmd(t *testing.T) {
+	// A plain launcher (editor/browser) folds into a host terminal's line.
+	editor, _ := newCommand("cursor", config.Opener{Kind: "command", Command: "cursor {{dir}}"})
+	if cmd, ok := editor.LaunchCmd(Target{Dir: "/code/app"}); !ok || cmd != "cursor '/code/app'" {
+		t.Errorf("editor LaunchCmd = %q, %v", cmd, ok)
+	}
+	if editor.EntersCurrentTab(ModeCurrentTab) {
+		t.Error("a command opener never enters the current tab")
+	}
+	// A {{cmd}} terminal spawns its own session, so it isn't foldable.
+	term, _ := newCommand("wezterm", config.Opener{Kind: "command", Command: "wezterm cli spawn --cwd {{dir}} -- bash -c {{cmd}}"})
+	if _, ok := term.LaunchCmd(Target{Dir: "/code/app"}); ok {
+		t.Error("an injecting command opener must not be foldable")
+	}
 }
 
 func TestCommandOpenerTemplating(t *testing.T) {

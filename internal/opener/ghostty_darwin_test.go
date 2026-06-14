@@ -90,6 +90,26 @@ func TestGhosttyClearOnlyForNewWindow(t *testing.T) {
 	}
 }
 
+func TestGhosttyEntersCurrentTabAndFolds(t *testing.T) {
+	g := newGhostty(config.Opener{ReuseWindow: true}).(*ghostty)
+	g.inside = func() bool { return true }
+
+	if !g.EntersCurrentTab(ModeWindow) {
+		t.Error("reuse_window inside Ghostty should enter the current tab")
+	}
+	g.inside = func() bool { return false }
+	if g.EntersCurrentTab(ModeWindow) {
+		t.Error("outside Ghostty a default open is a new window")
+	}
+
+	// Folded launches land between the cd and the entry command, in order.
+	g.inside = func() bool { return true }
+	line, inject := g.entryLine(Target{Dir: "/code/other", EnterCmd: "twig enter", Fold: []string{"cursor '/code/other'"}})
+	if !inject || line != "cd '/code/other' && cursor '/code/other' && twig enter" {
+		t.Errorf("folded current-tab line = %q inject=%v", line, inject)
+	}
+}
+
 func TestGhosttyReuseSkipsSelfCd(t *testing.T) {
 	cwd, err := os.Getwd()
 	if err != nil {

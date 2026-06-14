@@ -59,6 +59,15 @@ func (g *ghostty) Name() string        { return "ghostty" }
 func (g *ghostty) CanInject() bool     { return true }
 func (g *ghostty) CanCurrentTab() bool { return true }
 
+// EntersCurrentTab reports whether this open will land in the current tab,
+// so the caller can fold the other openers' launches into one entry line.
+func (g *ghostty) EntersCurrentTab(requested TargetMode) bool {
+	return g.modeFor(requested) == ModeCurrentTab
+}
+
+// LaunchCmd: ghostty hosts the entry line rather than being folded into one.
+func (g *ghostty) LaunchCmd(Target) (string, bool) { return "", false }
+
 func (g *ghostty) Available() error {
 	if _, err := exec.LookPath("osascript"); err != nil {
 		return fmt.Errorf("osascript not found")
@@ -98,11 +107,17 @@ func (g *ghostty) script(mode TargetMode) string {
 // dropped — leaving only the enter command, or nothing to type at all.
 func (g *ghostty) entryLine(t Target) (line string, inject bool) {
 	mode := g.modeFor(t.Mode)
-	if mode == ModeCurrentTab && sameDir(t.Dir) {
-		if t.EnterCmd == "" {
+	if mode == ModeCurrentTab && SameDir(t.Dir) {
+		// Already here: drop the redundant cd, but still run any folded
+		// launches and the entry command.
+		parts := append([]string{}, t.Fold...)
+		if t.EnterCmd != "" {
+			parts = append(parts, t.EnterCmd)
+		}
+		if len(parts) == 0 {
 			return "", false
 		}
-		return t.EnterCmd, true
+		return strings.Join(parts, " && "), true
 	}
 	return EntryLine(t, g.clear && mode == ModeWindow), true
 }
@@ -120,20 +135,4 @@ func (g *ghostty) Open(t Target) error {
 		return fmt.Errorf("ghostty opener: %w", err)
 	}
 	return nil
-}
-
-// sameDir reports whether target is the directory twig is running in,
-// comparing resolved paths so a symlinked worktree root still matches.
-func sameDir(target string) bool {
-	cwd, err := os.Getwd()
-	if err != nil {
-		return false
-	}
-	if r, err := filepath.EvalSymlinks(cwd); err == nil {
-		cwd = r
-	}
-	if r, err := filepath.EvalSymlinks(target); err == nil {
-		target = r
-	}
-	return cwd == target
 }

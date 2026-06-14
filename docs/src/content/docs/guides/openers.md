@@ -54,12 +54,19 @@ defeat the point of staying put. And if you're *already* in the target
 worktree, twig types nothing at all — no redundant `cd` echoed into your
 prompt.
 
-Because reusing the current tab works by typing `cd <dir>` into your
-shell, that command can only run once twig exits and your shell takes
-over — so you'll see it appear at the next prompt. For a fully in-process
-`cd` with no typing at all, use the [`tw` shell
-function](shell-integration.md), which `cd`s first and then runs the
-on-entry steps.
+When reusing the current window to move to a **different** worktree, your
+other openers (editors, browsers — e.g. `cursor`) are folded into that one
+injected line, so your shell runs `cd <dir> && cursor <dir> && twig enter`
+in order: cd first, then your tools, then the on-entry steps — all in the
+session you keep. (Editors get the absolute path either way; folding is
+about giving you one tidy, ordered line instead of a parallel launch while
+the `cd` waits.)
+
+Because reusing the current tab works by typing that line into your shell,
+it can only run once twig exits and your shell takes over — so you'll see
+it appear at the next prompt. For a fully in-process `cd` with no typing at
+all, use the [`tw` shell function](shell-integration.md), which `cd`s first
+and then runs the on-entry steps.
 
 ### command
 

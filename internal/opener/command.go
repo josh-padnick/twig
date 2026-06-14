@@ -31,6 +31,20 @@ func (c *command) Name() string        { return c.name }
 func (c *command) CanInject() bool     { return strings.Contains(c.template, "{{cmd}}") }
 func (c *command) CanCurrentTab() bool { return false }
 
+// EntersCurrentTab: a command opener always runs in its own process/window.
+func (c *command) EntersCurrentTab(TargetMode) bool { return false }
+
+// LaunchCmd offers this opener's launch for folding into a current-tab
+// terminal's entry line. Only non-injecting launchers (editors, browsers)
+// fold cleanly; a {{cmd}} template spawns its own terminal, so it runs on
+// its own instead.
+func (c *command) LaunchCmd(t Target) (string, bool) {
+	if c.CanInject() {
+		return "", false
+	}
+	return c.buildLine(t), true
+}
+
 // Available checks that the template's program exists on PATH.
 func (c *command) Available() error {
 	fields := strings.Fields(c.template)
