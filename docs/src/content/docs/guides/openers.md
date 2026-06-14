@@ -35,7 +35,7 @@ servers live in the terminal you land in. Tune it:
 ```toml
 [open.openers.ghostty]
 kind = "ghostty"
-clear = true          # clear after cd (new windows only — see below)
+clear = true          # clear after cd (new windows only)
 delay_ms = 300        # window-creation race delay
 reuse_window = true   # if you're already in Ghostty, stay in this window
 ```
@@ -47,22 +47,7 @@ one — making the default open behave like a per-invocation `-t`. Run from
 any other terminal, there's no Ghostty window to reuse, so it opens one as
 usual. (An explicit `-t` always enters the current tab regardless.)
 
-`clear` only fires when a **new window** is opened. Entering the current
-tab — whether via `reuse_window` or `-t` — never clears, because that
-scrollback is the session you're already working in; wiping it would
-defeat the point of staying put. And if you're *already* in the target
-worktree, twig types nothing at all — no redundant `cd` echoed into your
-prompt.
-
-When reusing the current window to move to a **different** worktree, your
-other openers (editors, browsers — e.g. `cursor`) are folded into that one
-injected line, so your shell runs `cd <dir> && cursor <dir> && twig enter`
-in order: cd first, then your tools, then the on-entry steps — all in the
-session you keep. (Editors get the absolute path either way; folding is
-about giving you one tidy, ordered line instead of a parallel launch while
-the `cd` waits.)
-
-Because reusing the current tab works by typing that line into your shell,
+Because reusing the current tab works by typing the entry command into your shell,
 it can only run once twig exits and your shell takes over — so you'll see
 it appear at the next prompt. For a fully in-process `cd` with no typing at
 all, use the [`tw` shell function](shell-integration.md), which `cd`s first
