@@ -67,6 +67,28 @@ func TestGhosttyReuseWindow(t *testing.T) {
 	}
 }
 
+func TestGhosttyClearOnlyForNewWindow(t *testing.T) {
+	clear := true
+	g := newGhostty(config.Opener{Clear: &clear, ReuseWindow: true}).(*ghostty)
+	tgt := Target{Dir: "/code/app", EnterCmd: "twig enter"}
+
+	// A new window (twig not running inside Ghostty) clears for a fresh start.
+	g.inside = func() bool { return false }
+	if line := g.entryLine(tgt); !strings.Contains(line, "clear") {
+		t.Errorf("new-window line should clear: %q", line)
+	}
+	// Reusing the current window must not clear — that scrollback is the
+	// user's working context.
+	g.inside = func() bool { return true }
+	if line := g.entryLine(tgt); strings.Contains(line, "clear") {
+		t.Errorf("reused-window line must not clear: %q", line)
+	}
+	// An explicit -t enters the current tab and likewise skips the clear.
+	if line := g.entryLine(Target{Dir: "/code/app", EnterCmd: "twig enter", Mode: ModeCurrentTab}); strings.Contains(line, "clear") {
+		t.Errorf("-t line must not clear: %q", line)
+	}
+}
+
 func TestInsideGhostty(t *testing.T) {
 	t.Setenv("GHOSTTY_RESOURCES_DIR", "")
 	t.Setenv("TERM_PROGRAM", "ghostty")

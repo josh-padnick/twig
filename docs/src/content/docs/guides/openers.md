@@ -35,7 +35,7 @@ servers live in the terminal you land in. Tune it:
 ```toml
 [open.openers.ghostty]
 kind = "ghostty"
-clear = true          # clear after cd
+clear = true          # clear after cd (new windows only — see below)
 delay_ms = 300        # window-creation race delay
 reuse_window = true   # if you're already in Ghostty, stay in this window
 ```
@@ -46,6 +46,11 @@ so, enters the worktree in your current window instead of spawning a new
 one — making the default open behave like a per-invocation `-t`. Run from
 any other terminal, there's no Ghostty window to reuse, so it opens one as
 usual. (An explicit `-t` always enters the current tab regardless.)
+
+`clear` only fires when a **new window** is opened. Entering the current
+tab — whether via `reuse_window` or `-t` — never clears, because that
+scrollback is the session you're already working in; wiping it would
+defeat the point of staying put.
 
 ### command
 

@@ -89,8 +89,16 @@ func (g *ghostty) script(mode TargetMode) string {
 		"end run\n"
 }
 
+// entryLine builds the shell line injected into the terminal. `clear` is
+// honored only when opening a new window; entering the current tab (via
+// reuse_window or -t) suppresses it so reusing a session never wipes the
+// scrollback the user is looking at.
+func (g *ghostty) entryLine(t Target) string {
+	return EntryLine(t, g.clear && g.modeFor(t.Mode) == ModeWindow)
+}
+
 func (g *ghostty) Open(t Target) error {
-	line := EntryLine(t, g.clear)
+	line := g.entryLine(t)
 	cmd := exec.Command("osascript", "-", line)
 	cmd.Stdin = strings.NewReader(g.script(g.modeFor(t.Mode)))
 	cmd.Stdout = os.Stderr
