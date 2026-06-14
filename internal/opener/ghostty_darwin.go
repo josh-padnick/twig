@@ -89,16 +89,29 @@ func (g *ghostty) script(mode TargetMode) string {
 		"end run\n"
 }
 
-// entryLine builds the shell line injected into the terminal. `clear` is
-// honored only when opening a new window; entering the current tab (via
-// reuse_window or -t) suppresses it so reusing a session never wipes the
-// scrollback the user is looking at.
-func (g *ghostty) entryLine(t Target) string {
-	return EntryLine(t, g.clear && g.modeFor(t.Mode) == ModeWindow)
+// entryLine builds the shell line injected into the terminal and reports
+// whether there's anything to inject at all. `clear` is honored only when
+// opening a new window; entering the current tab (via reuse_window or -t)
+// suppresses it so reusing a session never wipes the scrollback the user is
+// looking at. When entering the current tab and twig is already in the
+// target directory, the cd would be a no-op echoed into the prompt, so it's
+// dropped — leaving only the enter command, or nothing to type at all.
+func (g *ghostty) entryLine(t Target) (line string, inject bool) {
+	mode := g.modeFor(t.Mode)
+	if mode == ModeCurrentTab && sameDir(t.Dir) {
+		if t.EnterCmd == "" {
+			return "", false
+		}
+		return t.EnterCmd, true
+	}
+	return EntryLine(t, g.clear && mode == ModeWindow), true
 }
 
 func (g *ghostty) Open(t Target) error {
-	line := g.entryLine(t)
+	line, inject := g.entryLine(t)
+	if !inject {
+		return nil // already in the target tab with nothing to run
+	}
 	cmd := exec.Command("osascript", "-", line)
 	cmd.Stdin = strings.NewReader(g.script(g.modeFor(t.Mode)))
 	cmd.Stdout = os.Stderr
@@ -107,4 +120,20 @@ func (g *ghostty) Open(t Target) error {
 		return fmt.Errorf("ghostty opener: %w", err)
 	}
 	return nil
+}
+
+// sameDir reports whether target is the directory twig is running in,
+// comparing resolved paths so a symlinked worktree root still matches.
+func sameDir(target string) bool {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return false
+	}
+	if r, err := filepath.EvalSymlinks(cwd); err == nil {
+		cwd = r
+	}
+	if r, err := filepath.EvalSymlinks(target); err == nil {
+		target = r
+	}
+	return cwd == target
 }

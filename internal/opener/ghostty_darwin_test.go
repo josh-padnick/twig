@@ -3,6 +3,7 @@
 package opener
 
 import (
+	"os"
 	"strings"
 	"testing"
 
@@ -74,18 +75,41 @@ func TestGhosttyClearOnlyForNewWindow(t *testing.T) {
 
 	// A new window (twig not running inside Ghostty) clears for a fresh start.
 	g.inside = func() bool { return false }
-	if line := g.entryLine(tgt); !strings.Contains(line, "clear") {
+	if line, _ := g.entryLine(tgt); !strings.Contains(line, "clear") {
 		t.Errorf("new-window line should clear: %q", line)
 	}
 	// Reusing the current window must not clear — that scrollback is the
 	// user's working context.
 	g.inside = func() bool { return true }
-	if line := g.entryLine(tgt); strings.Contains(line, "clear") {
+	if line, _ := g.entryLine(tgt); strings.Contains(line, "clear") {
 		t.Errorf("reused-window line must not clear: %q", line)
 	}
 	// An explicit -t enters the current tab and likewise skips the clear.
-	if line := g.entryLine(Target{Dir: "/code/app", EnterCmd: "twig enter", Mode: ModeCurrentTab}); strings.Contains(line, "clear") {
+	if line, _ := g.entryLine(Target{Dir: "/code/app", EnterCmd: "twig enter", Mode: ModeCurrentTab}); strings.Contains(line, "clear") {
 		t.Errorf("-t line must not clear: %q", line)
+	}
+}
+
+func TestGhosttyReuseSkipsSelfCd(t *testing.T) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	g := newGhostty(config.Opener{ReuseWindow: true}).(*ghostty)
+	g.inside = func() bool { return true }
+
+	// Already in the target worktree, nothing to run: inject nothing, so no
+	// redundant cd is typed (and echoed) into the prompt.
+	if line, inject := g.entryLine(Target{Dir: cwd}); inject {
+		t.Errorf("same-dir reuse should inject nothing, got %q", line)
+	}
+	// Already there but with setup/run to do: inject just the enter command.
+	if line, inject := g.entryLine(Target{Dir: cwd, EnterCmd: "twig enter"}); !inject || line != "twig enter" {
+		t.Errorf("same-dir reuse with enter: line=%q inject=%v, want just the enter command", line, inject)
+	}
+	// A different worktree still cds.
+	if line, inject := g.entryLine(Target{Dir: cwd + "/elsewhere"}); !inject || !strings.Contains(line, "cd ") {
+		t.Errorf("different-dir reuse should cd: line=%q inject=%v", line, inject)
 	}
 }
 

@@ -50,7 +50,16 @@ usual. (An explicit `-t` always enters the current tab regardless.)
 `clear` only fires when a **new window** is opened. Entering the current
 tab — whether via `reuse_window` or `-t` — never clears, because that
 scrollback is the session you're already working in; wiping it would
-defeat the point of staying put.
+defeat the point of staying put. And if you're *already* in the target
+worktree, twig types nothing at all — no redundant `cd` echoed into your
+prompt.
+
+Because reusing the current tab works by typing `cd <dir>` into your
+shell, that command can only run once twig exits and your shell takes
+over — so you'll see it appear at the next prompt. For a fully in-process
+`cd` with no typing at all, use the [`tw` shell
+function](shell-integration.md), which `cd`s first and then runs the
+on-entry steps.
 
 ### command
 
