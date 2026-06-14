@@ -9,8 +9,9 @@ GitHub that no local checkout knows about. Remote pickup bridges that gap:
 ```sh
 twig -r fix-login
 # twig: no local match — searching remote branches of 3 repo(s)…
-# branch claude/fix-login-9a8b7c found on origin of ~/Code/myorg/app — fetch it and create a worktree? [Y/n]
-# twig: created worktree ~/Code/myorg/app/.claude/worktrees/fix-login-9a8b7c (branch claude/fix-login-9a8b7c)
+# twig: found claude/fix-login-9a8b7c on origin of ~/Code/myorg/app
+# fetch claude/fix-login-9a8b7c and create a worktree? [Y/n]
+# twig: fetched claude/fix-login-9a8b7c — created worktree at ~/Code/myorg/app/.claude/worktrees/fix-login-9a8b7c
 ```
 
 ## How it works
@@ -27,18 +28,39 @@ twig -r fix-login
    at the configured location, and continues the normal open/cd flow,
    [setup](../guides/setup-scripts.md) included.
 
+If the branch is **already checked out** in another worktree — say a
+cloud session you picked up earlier from a different directory — twig
+doesn't fail with git's `already used by worktree` error. It detects the
+existing worktree, lands you there, and runs the usual open/setup/run
+flow against it:
+
+```sh
+twig -r fix-login
+# twig: no local match — searching remote branches of 3 repo(s)…
+# twig: found claude/fix-login-9a8b7c on origin of ~/Code/myorg/app
+# fetch claude/fix-login-9a8b7c and create a worktree? [Y/n]
+# twig: claude/fix-login-9a8b7c is already checked out — entering ~/Code/myorg/app/.claude/worktrees/cranky-benz-b3b706
+```
+
 ## Configuration
 
 ```toml
 # ~/.config/twig/config.toml
 [remote]
 auto = false                          # set true to search on every local miss
+auto_create = false                   # set true to skip the confirmation and
+                                      # fetch+create automatically (implies auto)
 dir = ".claude/worktrees/{{slug}}"    # where fetched branches get worktrees,
                                       # relative to the repo's main worktree
 ```
 
 `{{slug}}` is the branch's last path segment; `{{branch}}` is the full
 name with `/` replaced by `-`.
+
+With `auto_create = true` a bare `twig <fragment>` becomes fully
+hands-off: on a local miss it searches remotes and creates (or reuses)
+the worktree without prompting. Because it implies `auto`, you don't
+need `-r` or `auto` set separately.
 
 ## Out of scope (for now)
 

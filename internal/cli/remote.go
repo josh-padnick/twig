@@ -29,7 +29,7 @@ func resolveFragmentOrRemote(frag string, remoteFlag bool) (resolve.Candidate, e
 	if cfgErr != nil {
 		return c, err
 	}
-	if !remoteFlag && !cfg.Remote.Auto {
+	if !remoteFlag && !cfg.Remote.Auto && !cfg.Remote.AutoCreate {
 		return c, err
 	}
 	return pickupRemote(frag, err)
@@ -57,7 +57,7 @@ func pickupRemote(frag string, noMatchErr error) (resolve.Candidate, error) {
 	if len(repos) == 0 {
 		return zero, noMatchErr
 	}
-	ui.Infof("twig: no local match — searching remote branches of %d repo(s)…", len(repos))
+	ui.Stepf("no local match — searching remote branches of %d repo(s)…", len(repos))
 	matches := remote.Search(frag, repos)
 	if len(matches) == 0 {
 		return zero, fmt.Errorf("%v; remote branches had no match either", noMatchErr)
@@ -67,20 +67,39 @@ func pickupRemote(frag string, noMatchErr error) (resolve.Candidate, error) {
 	if err != nil {
 		return zero, err
 	}
-	yes, err := ui.ConfirmYN(
-		fmt.Sprintf("branch %s found on %s of %s — fetch it and create a worktree?", m.Branch, m.Remote, m.RepoDir), true)
-	if err != nil {
-		return zero, fmt.Errorf("remote pickup needs a terminal to confirm: %w", err)
-	}
-	if !yes {
-		return zero, errors.New("cancelled")
+	ui.Stepf("found %s on %s of %s", m.Branch, m.Remote, ui.Tilde(m.RepoDir))
+
+	// If the branch is already checked out, there's nothing to fetch or
+	// create — just enter it. No confirmation: this is non-destructive and
+	// is exactly what the user asked for by naming the branch.
+	if path, ok := remote.ExistingCheckout(m); ok {
+		ui.Stepf("%s is already checked out — entering %s", m.Branch, ui.Tilde(path))
+		return resolve.Candidate{Path: path, Branch: m.Branch, Source: resolve.SourceRemote}, nil
 	}
 
-	path, err := remote.CreateWorktree(m, cfg.Remote.Dir)
+	// remote.auto_create skips the confirmation; otherwise ask before any
+	// fetch touches the network or disk.
+	if cfg.Remote.AutoCreate {
+		ui.Stepf("remote.auto_create is on — fetching without asking")
+	} else {
+		yes, err := ui.ConfirmYN(fmt.Sprintf("fetch %s and create a worktree?", m.Branch), true)
+		if err != nil {
+			return zero, fmt.Errorf("remote pickup needs a terminal to confirm: %w", err)
+		}
+		if !yes {
+			return zero, errors.New("cancelled")
+		}
+	}
+
+	path, reused, err := remote.CreateWorktree(m, cfg.Remote.Dir)
 	if err != nil {
 		return zero, err
 	}
-	ui.Infof("twig: created worktree %s (branch %s)", path, m.Branch)
+	if reused {
+		ui.Stepf("%s is already checked out — entering %s", m.Branch, ui.Tilde(path))
+	} else {
+		ui.Stepf("fetched %s — created worktree at %s", m.Branch, ui.Tilde(path))
+	}
 	return resolve.Candidate{Path: path, Branch: m.Branch, Source: resolve.SourceRemote}, nil
 }
 

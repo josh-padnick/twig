@@ -108,6 +108,7 @@ delay_ms = 500
 
 [remote]
 auto = true
+auto_create = true
 dir = "wt/{{slug}}"
 `))
 	if err != nil || len(warnings) != 0 {
@@ -121,7 +122,7 @@ dir = "wt/{{slug}}"
 	if gh.Clear == nil || *gh.Clear || gh.DelayMs == nil || *gh.DelayMs != 500 {
 		t.Errorf("ghostty opener = %+v", gh)
 	}
-	if !cfg.Remote.Auto || cfg.Remote.Dir != "wt/{{slug}}" {
+	if !cfg.Remote.Auto || !cfg.Remote.AutoCreate || cfg.Remote.Dir != "wt/{{slug}}" {
 		t.Errorf("remote = %+v", cfg.Remote)
 	}
 }

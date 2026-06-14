@@ -155,7 +155,7 @@ func runOpen(frag string, f openFlags) error {
 		if !op.CanCurrentTab() {
 			t.Mode = opener.ModeWindow
 		}
-		ui.Infof("twig → %s: %s", op.Name(), c.Path)
+		ui.Stepf("opening %s with %s", ui.Tilde(c.Path), op.Name())
 		if err := op.Open(t); err != nil {
 			failures = append(failures, err.Error())
 		}

@@ -48,8 +48,9 @@ type Opener struct {
 
 // Remote configures remote-branch pickup for cloud sessions.
 type Remote struct {
-	Auto bool   `toml:"auto"`
-	Dir  string `toml:"dir"` // worktree location template relative to the main repo root
+	Auto       bool   `toml:"auto"`        // search remotes on every local miss (no -r needed)
+	AutoCreate bool   `toml:"auto_create"` // fetch and create the worktree without the y/N confirmation; implies Auto
+	Dir        string `toml:"dir"`         // worktree location template relative to the main repo root
 }
 
 // Setup configures the on-entry setup behavior.
