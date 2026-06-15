@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/josh-padnick/twig/internal/testutil"
@@ -12,6 +13,42 @@ import (
 // newTestResolver builds a resolver rooted at the fixture's layout.
 func newTestResolver(f *testutil.Fixture, cwd string) *Resolver {
 	return &Resolver{Cwd: cwd, Home: f.Home, Roots: []string{f.CodeRoot}, Providers: Builtin}
+}
+
+func TestResolveTraceNarratesScan(t *testing.T) {
+	f := testutil.StandardFixture(t)
+	r := newTestResolver(f, f.Tmp) // outside any repo: forces the filesystem scan
+	var lines []string
+	r.Trace = func(msg string) { lines = append(lines, msg) }
+
+	if _, err := r.Resolve("matsumoto"); err != nil {
+		t.Fatalf("Resolve: %v", err)
+	}
+
+	joined := strings.Join(lines, "\n")
+	for _, want := range []string{"resolving", "scanning", "checking ", "matched"} {
+		if !strings.Contains(joined, want) {
+			t.Errorf("trace missing %q; got:\n%s", want, joined)
+		}
+	}
+	// One of the checked locations must be a real scan parent on disk.
+	checkedClaudeWorktrees := false
+	for _, l := range lines {
+		if strings.HasPrefix(l, "checking ") && strings.Contains(l, filepath.Join(".claude", "worktrees")) {
+			checkedClaudeWorktrees = true
+		}
+	}
+	if !checkedClaudeWorktrees {
+		t.Errorf("expected a 'checking …/.claude/worktrees' line; got:\n%s", joined)
+	}
+}
+
+func TestResolveTraceSilentByDefault(t *testing.T) {
+	f := testutil.StandardFixture(t)
+	// A nil Trace must never be invoked — resolution stays pure by default.
+	if _, err := newTestResolver(f, f.App).Resolve("matsumoto"); err != nil {
+		t.Fatalf("Resolve: %v", err)
+	}
 }
 
 func TestResolveAgainstStandardFixture(t *testing.T) {

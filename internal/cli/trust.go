@@ -40,7 +40,7 @@ func newTrustCmd() *cobra.Command {
 				return err
 			}
 			if len(args) == 1 {
-				c, err := resolveFragment(args[0])
+				c, err := resolveFragment(args[0], false)
 				if err != nil {
 					return err
 				}

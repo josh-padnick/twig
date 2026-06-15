@@ -42,6 +42,51 @@ twig -r fix-login
 # twig: claude/fix-login-9a8b7c is already checked out — entering ~/Code/myorg/app/.claude/worktrees/cranky-benz-b3b706
 ```
 
+## Pull request URLs
+
+When you have a PR open in the browser, you don't need to hunt for its
+branch name. Hand twig the URL and it picks up the head branch for you:
+
+```sh
+twig https://github.com/fabricahq/app/pull/140
+# twig: resolving PR #140 of fabricahq/app across 3 local repo(s)…
+# twig: PR #140 is claude/per-request-identity on origin of ~/Code/fabricahq/app
+# fetch claude/per-request-identity and create a worktree? [Y/n]
+# twig: fetched claude/per-request-identity — created worktree at ~/Code/fabricahq/app/.claude/worktrees/per-request-identity
+```
+
+The URL doesn't have to point at the PR root — any URL inside the PR works,
+so you can copy it straight from the address bar:
+`…/pull/140/files`, `…/pull/140/changes`, `…/pull/140/commits`, and so on.
+
+This is just remote pickup with the branch handed to it directly, so
+everything above applies — the confirm prompt, the already-checked-out
+shortcut, `confirm_before_fetch`, the worktree `dir` template. The one
+difference is that a PR URL is an explicit request, so it works **without**
+`-r` and ignores `auto_include`. `tw <url>` and `twig cd <url>` resolve a PR
+URL too.
+
+### How twig finds the branch
+
+twig maps the PR back to its branch using git alone — no GitHub API, no
+token:
+
+1. It finds the local checkout whose remote points at the PR's repo
+   (`fabricahq/app`), the same set of repos searched by fragment pickup.
+2. It asks that remote where the PR head sits with
+   `git ls-remote <remote> refs/pull/140/head` — a ref GitHub maintains for
+   every PR.
+3. It maps that commit back to exactly one non-default branch on the remote,
+   then fetches and creates the worktree as usual.
+
+Because the branch is recovered from the remote's own branch list, the head
+branch must live in **the same repository** and still exist. A PR opened
+from a fork, or one whose branch was deleted after merge, can't be resolved
+this way. twig also refuses to guess when multiple non-default branches point
+at the PR head commit. Fall back to naming the branch with `twig -r <branch>`
+if it's still around. And as with all remote pickup, the repository has to be
+on disk somewhere under your roots.
+
 ## Configuration
 
 ```toml

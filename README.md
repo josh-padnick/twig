@@ -42,7 +42,9 @@ web, Codex) leave a branch on GitHub and no local directory at all.
 
 twig knows all of these out of the box. The first two are scanned
 automatically. For the third, `twig -r <fragment>` searches the remotes of
-repos you already have, fetches the branch, and builds the worktree.
+repos you already have, fetches the branch, and builds the worktree — or
+hand twig the PR's GitHub URL (`twig https://github.com/org/app/pull/140`)
+and it finds the head branch for you.
 
 ## Install
 
@@ -66,6 +68,8 @@ twig <fragment>        # open the matching worktree (new Ghostty window)
 twig                   # inside a repo: fuzzy-pick among its worktrees
 twig -t <fragment>     # enter in the current tab instead
 twig -r <fragment>     # also search remote branches (Claude Code web, Codex)
+twig <pr-url>          # open a GitHub PR's branch (e.g. .../pull/140)
+twig -v <fragment>     # narrate each step and scan location checked
 tw <fragment>          # cd in place (via shell-init)
 twig list              # everything twig can see, with branch + status
 twig rm <fragment>     # remove a worktree (confirms; keeps the branch)

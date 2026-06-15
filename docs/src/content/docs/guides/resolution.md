@@ -16,7 +16,28 @@ description: The exact order and ranking twig uses to turn a fragment into a wor
    `roots`, accepting only directories that contain a `.git` entry.
 
 If nothing matches and remote pickup is enabled, twig can also
-[search remote branches](../guides/remote-pickup.md).
+[search remote branches](../guides/remote-pickup.md). A fragment that is a
+[GitHub pull request URL](../guides/remote-pickup.md#pull-request-urls)
+skips local resolution entirely and goes straight to the PR's head branch.
+
+## Seeing the search: `-v`
+
+Pass `-v` (or `--verbose`) to watch twig resolve. It narrates each step and
+prints every scan location as it checks it, so you can tell exactly which
+roots and provider directories were searched and where the match came from:
+
+```sh
+twig -v ecstatic-euclid
+# twig: resolving "ecstatic-euclid"
+# twig: scanning 23 worktree location(s) under your roots and providers
+# twig: checking ~/Code/josh-padnick
+# twig: checking ~/Code/josh-padnick/twig/.claude/worktrees
+# twig: matched 1 worktree(s) by scan
+# twig: opening ~/Code/josh-padnick/twig/.claude/worktrees/ecstatic-euclid-8f14c5 with ghostty
+```
+
+`twig cd -v` traces to stderr while still printing only the resolved path on
+stdout, so `cd "$(twig cd -v foo)"` keeps working.
 
 ## Ranking: exact beats substring, branches beat directories
 

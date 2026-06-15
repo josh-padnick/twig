@@ -9,10 +9,17 @@ Bare `twig <fragment>` resolves and opens the worktree with your
 configured [opener set](../guides/openers.md). Bare `twig` inside a repo
 fuzzy-picks among that repo's worktrees; outside one it shows help.
 
+The fragment can also be a **GitHub pull request URL** —
+`twig https://github.com/org/app/pull/140` (or any URL inside that PR, like
+`…/pull/140/files`). twig maps it to the PR's head branch and picks it up
+exactly as `twig -r <branch>` would, no `-r` needed. See
+[remote pickup](../guides/remote-pickup.md#pull-request-urls).
+
 | Flag | Meaning |
 | --- | --- |
 | `-t, --tab` | enter in the current tab instead of a new window |
 | `-r, --remote` | search remote branches when nothing matches locally |
+| `-v, --verbose` | narrate each resolution step and scan location checked |
 | `--run` | run the `[run]` script after setup succeeds |
 | `--setup` | force the setup script to re-run |
 | `--no-setup` | skip setup entirely |
@@ -36,8 +43,8 @@ wizard automatically.
 ## twig cd [fragment]
 
 Prints the resolved worktree path on stdout and nothing else, for
-`cd "$(twig cd foo)"`. Supports `-r`. With no fragment, picks among the
-current repo's worktrees.
+`cd "$(twig cd foo)"`. Supports `-r`, `-v`, and PR-URL fragments. With no
+fragment, picks among the current repo's worktrees.
 
 ## twig enter [dir] [--run] [--setup] [--no-setup]
 
