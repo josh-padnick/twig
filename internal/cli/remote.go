@@ -40,8 +40,13 @@ func resolveFragmentOrRemote(frag string, remoteFlag, verbose bool) (resolve.Can
 		return c, err
 	}
 	if id, ok := codex.ThreadID(frag); ok {
-		if cand, cerr := resolveCodexThread(id); cerr == nil {
+		cand, cerr := resolveCodexThread(id)
+		if cerr == nil {
 			return cand, nil
+		}
+		var notFound *codex.NotFoundError
+		if !errors.As(cerr, &notFound) {
+			return c, cerr
 		}
 	}
 	cfg, cfgErr := loadConfig()

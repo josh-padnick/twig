@@ -5,8 +5,13 @@ package cli
 
 import (
 	"bytes"
+	"errors"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
+	"github.com/josh-padnick/twig/internal/resolve"
 	"github.com/josh-padnick/twig/internal/testutil"
 )
 
@@ -52,5 +57,40 @@ func TestCdNoMatchWritesNothingToStdout(t *testing.T) {
 	}
 	if out.Len() != 0 {
 		t.Errorf("stdout should be empty on failure, got %q", out.String())
+	}
+}
+
+func TestBareCodexThreadSurfacesStaleCwd(t *testing.T) {
+	f := testutil.StandardFixture(t)
+	isolate(t, f)
+	t.Chdir(f.Tmp)
+
+	id := "019eccfa-62f5-7733-8fc0-059abf2ea60b"
+	writeCodexSession(t, f.Home, id, filepath.Join(f.Tmp, "gone"))
+
+	_, err := resolveFragmentOrRemote(id, false, false)
+	if err == nil {
+		t.Fatal("expected stale Codex cwd error")
+	}
+	var noMatch *resolve.NoMatchError
+	if errors.As(err, &noMatch) {
+		t.Fatalf("err = %v, want Codex stale cwd error", err)
+	}
+	if !strings.Contains(err.Error(), "directory no longer exists") {
+		t.Fatalf("err = %v, want stale cwd message", err)
+	}
+}
+
+func writeCodexSession(t *testing.T, home, id, cwd string) {
+	t.Helper()
+	dir := filepath.Join(home, ".codex", "sessions", "2026", "06", "15")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	body := `{"type":"session_meta","payload":{"id":"` + id + `","cwd":"` + cwd + `"}}
+`
+	path := filepath.Join(dir, "rollout-2026-06-15T13-30-21-"+id+".jsonl")
+	if err := os.WriteFile(path, []byte(body), 0o644); err != nil {
+		t.Fatal(err)
 	}
 }
