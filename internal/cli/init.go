@@ -96,7 +96,7 @@ func runInitWizard(force bool) error {
 	if err := os.WriteFile(cfgPath, []byte(content), 0o644); err != nil {
 		return err
 	}
-	ui.Infof("twig: wrote %s", cfgPath)
+	ui.Stepf("wrote %s", displayPath(home, cfgPath))
 
 	offerShellInit(home)
 
@@ -208,9 +208,9 @@ func offerShellInit(home string) {
 	case err != nil:
 		ui.Warnf("could not update %s: %v", rc.Path, err)
 	case added:
-		ui.Infof("twig: added to %s — restart your shell (or source it) to get `tw`", displayPath(home, rc.Path))
+		ui.Stepf("added to %s — restart your shell (or source it) to get `tw`", displayPath(home, rc.Path))
 	default:
-		ui.Infof("twig: %s already references twig shell-init — nothing to do", displayPath(home, rc.Path))
+		ui.Stepf("%s already references twig shell-init — nothing to do", displayPath(home, rc.Path))
 	}
 }
 

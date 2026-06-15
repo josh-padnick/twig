@@ -35,9 +35,23 @@ servers live in the terminal you land in. Tune it:
 ```toml
 [open.openers.ghostty]
 kind = "ghostty"
-clear = true        # clear after cd
-delay_ms = 300      # window-creation race delay
+clear = true          # clear after cd (new windows only)
+delay_ms = 300        # window-creation race delay
+reuse_window = true   # if you're already in Ghostty, stay in this window
 ```
+
+With `reuse_window = true`, twig checks whether it's running inside
+Ghostty (via the `TERM_PROGRAM` / `GHOSTTY_RESOURCES_DIR` it sets) and, if
+so, enters the worktree in your current window instead of spawning a new
+one — making the default open behave like a per-invocation `-t`. Run from
+any other terminal, there's no Ghostty window to reuse, so it opens one as
+usual. (An explicit `-t` always enters the current tab regardless.)
+
+Because reusing the current tab works by typing the entry command into your shell,
+it can only run once twig exits and your shell takes over — so you'll see
+it appear at the next prompt. For a fully in-process `cd` with no typing at
+all, use the [`tw` shell function](shell-integration.md), which `cd`s first
+and then runs the on-entry steps.
 
 ### command
 

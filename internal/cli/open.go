@@ -146,17 +146,44 @@ func runOpen(frag string, f openFlags) error {
 		}
 	}
 
+	// When a terminal opener will enter the current tab and actually change
+	// directory, fold the other openers' launches into its single entry
+	// line so the kept session runs cd → launches → enter in order, rather
+	// than opening them in parallel while the cd waits for twig to exit.
+	host := currentTabHost(ops, mode, c.Path)
+
 	var failures []string
-	for _, op := range ops {
-		t := opener.Target{Dir: c.Path, EnterCmd: enterCmd, Mode: mode}
+	var fold []string
+	for i, op := range ops {
+		ui.Stepf("opening %s with %s", ui.Tilde(c.Path), op.Name())
+		if host >= 0 {
+			if i == host {
+				continue // opened last, hosting the folded launches
+			}
+			if cmd, ok := op.LaunchCmd(opener.Target{Dir: c.Path}); ok {
+				fold = append(fold, cmd)
+				continue
+			}
+		}
+		// Non-host openers carry no entry command — the host runs it.
+		enter := enterCmd
+		if host >= 0 {
+			enter = ""
+		}
+		t := opener.Target{Dir: c.Path, EnterCmd: enter, Mode: mode}
 		if !op.CanInject() {
 			t.EnterCmd = ""
 		}
 		if !op.CanCurrentTab() {
 			t.Mode = opener.ModeWindow
 		}
-		ui.Infof("twig → %s: %s", op.Name(), c.Path)
 		if err := op.Open(t); err != nil {
+			failures = append(failures, err.Error())
+		}
+	}
+	if host >= 0 {
+		t := opener.Target{Dir: c.Path, EnterCmd: enterCmd, Mode: mode, Fold: fold}
+		if err := ops[host].Open(t); err != nil {
 			failures = append(failures, err.Error())
 		}
 	}
@@ -164,6 +191,23 @@ func runOpen(frag string, f openFlags) error {
 		return errors.New(strings.Join(failures, "; "))
 	}
 	return nil
+}
+
+// currentTabHost returns the index of the opener that will enter the current
+// tab and so should host the others' launch commands, or -1 when none will.
+// Folding only helps when there's a real cd to lead with: a new window is
+// already a clean slate, and reusing the tab we're already in has no cd, so
+// those keep opening each opener independently.
+func currentTabHost(ops []opener.Opener, mode opener.TargetMode, dir string) int {
+	if opener.SameDir(dir) {
+		return -1
+	}
+	for i, op := range ops {
+		if op.EntersCurrentTab(mode) {
+			return i
+		}
+	}
+	return -1
 }
 
 // openerSet computes which openers run and against which catalog:

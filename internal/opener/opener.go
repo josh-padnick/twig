@@ -8,6 +8,8 @@ package opener
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/josh-padnick/twig/internal/config"
@@ -26,6 +28,10 @@ type Target struct {
 	Dir      string // worktree directory (absolute)
 	EnterCmd string // twig-enter command to run in the shell, "" for none
 	Mode     TargetMode
+	// Fold holds other openers' launch commands to run after the cd and
+	// before the entry command. Folded launches are best-effort so they cannot
+	// prevent setup or --run from executing in the terminal.
+	Fold []string
 }
 
 // Opener is one named way of opening a worktree.
@@ -37,6 +43,14 @@ type Opener interface {
 	// CanCurrentTab reports whether the opener supports -t (entering the
 	// worktree in the currently focused tab instead of a new window).
 	CanCurrentTab() bool
+	// EntersCurrentTab reports whether, for the requested mode, this opener
+	// will actually run the entry in the current tab (vs a new window). A
+	// current-tab terminal can host the other openers' launch commands.
+	EntersCurrentTab(requested TargetMode) bool
+	// LaunchCmd returns the shell command that performs this opener's launch
+	// (e.g. `cursor '/dir'`) and whether it can be folded into a host
+	// terminal's entry line. Terminals that host the entry return ok=false.
+	LaunchCmd(t Target) (cmd string, ok bool)
 	// Available diagnoses whether the opener can work on this machine.
 	Available() error
 	Open(t Target) error
@@ -62,15 +76,51 @@ func FromConfig(name string, oc config.Open) (Opener, error) {
 	}
 }
 
-// EntryLine composes the shell line a terminal opener types on entry:
-// cd into the worktree, optionally clear (gw parity), then twig enter.
+// EntryLine composes the shell line a terminal opener types on entry: cd into
+// the worktree, optionally clear (gw parity), then any folded opener launches,
+// then twig enter. The cd/clear steps gate the rest; folded launch failures do
+// not stop the entry command.
 func EntryLine(t Target, clear bool) string {
 	parts := []string{"cd " + Quote(t.Dir)}
 	if clear {
 		parts = append(parts, "clear")
 	}
+	return joinEntryLine(parts, t)
+}
+
+func joinEntryLine(gated []string, t Target) string {
+	tail := append([]string{}, t.Fold...)
 	if t.EnterCmd != "" {
-		parts = append(parts, t.EnterCmd)
+		tail = append(tail, t.EnterCmd)
 	}
-	return strings.Join(parts, " && ")
+	if len(t.Fold) == 0 {
+		parts := append([]string{}, gated...)
+		parts = append(parts, tail...)
+		return strings.Join(parts, " && ")
+	}
+	tailLine := strings.Join(tail, "; ")
+	if len(gated) == 0 {
+		return tailLine
+	}
+	if tailLine == "" {
+		return strings.Join(gated, " && ")
+	}
+	return strings.Join(gated, " && ") + " && { " + tailLine + "; }"
+}
+
+// SameDir reports whether target is the directory twig is running in,
+// comparing resolved paths so a symlinked worktree root still matches. Used
+// to skip a redundant self-cd when reusing the current terminal.
+func SameDir(target string) bool {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return false
+	}
+	if r, err := filepath.EvalSymlinks(cwd); err == nil {
+		cwd = r
+	}
+	if r, err := filepath.EvalSymlinks(target); err == nil {
+		target = r
+	}
+	return cwd == target
 }

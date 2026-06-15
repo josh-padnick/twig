@@ -40,16 +40,18 @@ type Open struct {
 // built-in AppleScript launcher; kind "command" runs a template with
 // {{dir}} (and optionally {{cmd}} for injection-capable terminals).
 type Opener struct {
-	Kind    string `toml:"kind"`
-	Command string `toml:"command"`
-	Clear   *bool  `toml:"clear"`    // ghostty: inject `clear` after cd (default true)
-	DelayMs *int   `toml:"delay_ms"` // ghostty: delay before input text (default 300)
+	Kind        string `toml:"kind"`
+	Command     string `toml:"command"`
+	Clear       *bool  `toml:"clear"`        // ghostty: inject `clear` after cd (default true)
+	DelayMs     *int   `toml:"delay_ms"`     // ghostty: delay before input text (default 300)
+	ReuseWindow bool   `toml:"reuse_window"` // ghostty: when already inside Ghostty, enter the current window instead of opening a new one
 }
 
 // Remote configures remote-branch pickup for cloud sessions.
 type Remote struct {
-	Auto bool   `toml:"auto"`
-	Dir  string `toml:"dir"` // worktree location template relative to the main repo root
+	AutoInclude        bool   `toml:"auto_include"`         // include remote branches in the search on every local miss (no -r needed)
+	ConfirmBeforeFetch *bool  `toml:"confirm_before_fetch"` // prompt before fetching a matched branch (default true); false = fetch without asking
+	Dir                string `toml:"dir"`                  // worktree location template relative to the main repo root
 }
 
 // Setup configures the on-entry setup behavior.
@@ -156,4 +158,11 @@ func (c Config) ExpandedRoots(home string) []string {
 // SetupAuto reports whether setup should run on entry (default true).
 func (c Config) SetupAuto() bool {
 	return c.Setup.Auto == nil || *c.Setup.Auto
+}
+
+// RemoteConfirmBeforeFetch reports whether remote pickup should ask before
+// fetching a matched branch (default true). Set it false to fetch and create
+// the worktree without a prompt.
+func (c Config) RemoteConfirmBeforeFetch() bool {
+	return c.Remote.ConfirmBeforeFetch == nil || *c.Remote.ConfirmBeforeFetch
 }

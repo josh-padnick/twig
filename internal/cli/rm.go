@@ -69,9 +69,9 @@ func newRmCmd() *cobra.Command {
 				return err
 			}
 			if branch != "" {
-				ui.Infof("twig: removed worktree %s — branch %s kept (delete with: git -C %s branch -d %s)", c.Path, branch, mainDir, branch)
+				ui.Stepf("removed worktree %s — branch %s kept (delete with: git -C %s branch -d %s)", ui.Tilde(c.Path), branch, mainDir, branch)
 			} else {
-				ui.Infof("twig: removed worktree %s", c.Path)
+				ui.Stepf("removed worktree %s", ui.Tilde(c.Path))
 			}
 			return nil
 		},

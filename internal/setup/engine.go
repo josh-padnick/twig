@@ -69,7 +69,7 @@ func (e *Engine) Enter(opts EnterOptions) error {
 
 	if !opts.SkipSetup && strings.TrimSpace(ld.Manifest.Setup.Run) != "" {
 		if opts.ForceSetup || needsSetup(opts.Dir, ld) {
-			ui.Infof("twig: running setup from %s", ld.Path)
+			ui.Stepf("running setup from %s", ui.Tilde(ld.Path))
 			if err := e.runScript(opts.Dir, ld.Manifest.Setup.Run, false); err != nil {
 				return fmt.Errorf("setup failed: %v — fix it and re-enter, or force a re-run with --setup", err)
 			}
@@ -99,7 +99,7 @@ func (e *Engine) EnsureTrusted(ld *Loaded, dir string) error {
 	if ok {
 		return nil
 	}
-	ui.Infof("twig: %s is not trusted; its scripts are blocked until you approve it:\n", ld.Path)
+	ui.Stepf("%s is not trusted; its scripts are blocked until you approve it:\n", ui.Tilde(ld.Path))
 	fmt.Fprintf(os.Stderr, "%s\n", ld.Content)
 	if e.Confirm != nil {
 		yes, cerr := e.Confirm("trust this twig.toml and continue?")

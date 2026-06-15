@@ -24,9 +24,12 @@ providers = ["conductor", "claude-code"]
 default = ["ghostty"]
 
 [open.openers.ghostty]
-kind = "ghostty"     # built-in kinds: ghostty | command
-clear = true         # inject `clear` after cd
-delay_ms = 300       # AppleScript delay before typing into the new window
+kind = "ghostty"      # built-in kinds: ghostty | command
+clear = true          # clear after cd — new windows only; skipped when
+                      # entering the current tab so scrollback survives
+delay_ms = 300        # AppleScript delay before typing into the new window
+reuse_window = false  # when already inside Ghostty, enter the current window
+                      # instead of opening a new one (same as a one-off -t)
 
 # Define any other tool as a command template:
 # [open.openers.cursor]
@@ -36,7 +39,9 @@ delay_ms = 300       # AppleScript delay before typing into the new window
 #                                     #   (makes a terminal injection-capable)
 
 [remote]
-auto = false                          # search remotes on every local miss
+auto_include = false                  # include remotes in the search on every local miss
+confirm_before_fetch = true           # ask before fetching a match; set false
+                                      # to fetch + create the worktree silently
 dir = ".claude/worktrees/{{slug}}"    # worktree location for fetched
                                       # branches, relative to the main
                                       # worktree; {{branch}} = name with /→-

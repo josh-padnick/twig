@@ -8,7 +8,6 @@ package remote
 import (
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/josh-padnick/twig/internal/gitx"
@@ -88,9 +87,9 @@ func TestCreateWorktreeFetchesAndChecksOut(t *testing.T) {
 	f := newCloudFixture(t, "claude/fix-login-9a8b7c")
 	m := Search("fix-login", []string{f.clone})[0]
 
-	path, err := CreateWorktree(m, filepath.Join(".claude", "worktrees", "{{slug}}"))
-	if err != nil {
-		t.Fatal(err)
+	path, reused, err := CreateWorktree(m, filepath.Join(".claude", "worktrees", "{{slug}}"))
+	if err != nil || reused {
+		t.Fatalf("path=%s reused=%v err=%v", path, reused, err)
 	}
 	want := filepath.Join(f.clone, ".claude", "worktrees", "fix-login-9a8b7c")
 	if path != want {
@@ -109,9 +108,55 @@ func TestCreateWorktreeFetchesAndChecksOut(t *testing.T) {
 		t.Errorf("post-pickup resolve: res=%+v err=%v", res, err)
 	}
 
-	// Re-creating must refuse: the target exists.
-	if _, err := CreateWorktree(m, filepath.Join(".claude", "worktrees", "{{slug}}")); err == nil || !strings.Contains(err.Error(), "already exists") {
-		t.Errorf("err = %v, want already-exists refusal", err)
+	// Re-running pickup must land in the existing worktree, not fail: the
+	// branch is already checked out there.
+	again, reused, err := CreateWorktree(m, filepath.Join(".claude", "worktrees", "{{slug}}"))
+	if err != nil || !reused || again != path {
+		t.Errorf("re-pickup: path=%s reused=%v err=%v, want reuse of %s", again, reused, err, path)
+	}
+}
+
+func TestCreateWorktreeReusesExistingCheckout(t *testing.T) {
+	f := newCloudFixture(t, "claude/already-out-1a2b3c")
+	m := Search("already-out", []string{f.clone})[0]
+
+	first, reused, err := CreateWorktree(m, filepath.Join("wt", "{{slug}}"))
+	if err != nil || reused {
+		t.Fatalf("first create: path=%s reused=%v err=%v", first, reused, err)
+	}
+	// A second pickup, even with a different target template, lands in the
+	// existing checkout — reuse is keyed on the branch, not the target path.
+	again, reused, err := CreateWorktree(m, filepath.Join("other", "{{slug}}"))
+	if err != nil || !reused || again != first {
+		t.Errorf("reuse: path=%s reused=%v err=%v, want reuse of %s", again, reused, err, first)
+	}
+}
+
+func TestCreateWorktreeRecreatesStaleExistingCheckout(t *testing.T) {
+	f := newCloudFixture(t, "claude/stale-out-1a2b3c")
+	m := Search("stale-out", []string{f.clone})[0]
+
+	first, reused, err := CreateWorktree(m, filepath.Join("wt", "{{slug}}"))
+	if err != nil || reused {
+		t.Fatalf("first create: path=%s reused=%v err=%v", first, reused, err)
+	}
+	if err := os.RemoveAll(first); err != nil {
+		t.Fatal(err)
+	}
+	if path, ok := ExistingCheckout(m); ok {
+		t.Fatalf("ExistingCheckout = %s, true; want stale record skipped", path)
+	}
+
+	again, reused, err := CreateWorktree(m, filepath.Join("fresh", "{{slug}}"))
+	if err != nil || reused {
+		t.Fatalf("recreate: path=%s reused=%v err=%v", again, reused, err)
+	}
+	want := filepath.Join(f.clone, "fresh", "stale-out-1a2b3c")
+	if again != want {
+		t.Errorf("path = %s, want %s", again, want)
+	}
+	if branch, _ := gitx.CurrentBranch(again); branch != "claude/stale-out-1a2b3c" {
+		t.Errorf("branch = %q", branch)
 	}
 }
 
@@ -122,9 +167,9 @@ func TestCreateWorktreeWithExistingLocalBranch(t *testing.T) {
 	testutil.Git(t, f.clone, "branch", "feat/local-already", "origin/feat/local-already")
 
 	m := Match{RepoDir: f.clone, Remote: "origin", Branch: "feat/local-already", Tier: resolve.TierExactBranch}
-	path, err := CreateWorktree(m, "{{branch}}-wt")
-	if err != nil {
-		t.Fatal(err)
+	path, reused, err := CreateWorktree(m, "{{branch}}-wt")
+	if err != nil || reused {
+		t.Fatalf("path=%s reused=%v err=%v", path, reused, err)
 	}
 	if filepath.Base(path) != "feat-local-already-wt" {
 		t.Errorf("path = %s, want {{branch}} sanitized", path)

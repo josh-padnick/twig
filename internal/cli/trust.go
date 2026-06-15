@@ -56,7 +56,7 @@ func newTrustCmd() *cobra.Command {
 				if err != nil {
 					return err
 				}
-				ui.Infof("revoked %d approval(s) for %s", n, manifest)
+				ui.Stepf("revoked %d approval(s) for %s", n, ui.Tilde(manifest))
 				return nil
 			}
 
@@ -73,7 +73,7 @@ func newTrustCmd() *cobra.Command {
 			if err := store.Approve(manifest, content); err != nil {
 				return err
 			}
-			ui.Infof("twig: trusted %s", manifest)
+			ui.Stepf("trusted %s", ui.Tilde(manifest))
 			return nil
 		},
 	}

@@ -13,29 +13,66 @@ import (
 	"golang.org/x/term"
 )
 
-// Infof prints an informational message to stderr.
+// Infof prints raw informational text to stderr, unprefixed — for wizard
+// prose and listings that aren't twig narrating an action. Operational
+// steps should use Stepf so they carry the consistent "twig:" marker.
 func Infof(format string, args ...any) {
 	fmt.Fprintf(os.Stderr, format+"\n", args...)
+}
+
+// Stepf narrates one step of twig's own work to stderr. The "twig:" prefix
+// is dimmed on a terminal so the message — and any subprocess output
+// (git, setup scripts) interleaved with it — stays readable at a glance,
+// and so a reader can pick twig's lines out of a busy log at a glance.
+func Stepf(format string, args ...any) {
+	fmt.Fprintln(os.Stderr, dim("twig:")+" "+fmt.Sprintf(format, args...))
 }
 
 // Boldf prints an emphasized line to stderr, degrading to plain text when
 // stderr isn't a terminal (logs, pipes).
 func Boldf(format string, args ...any) {
-	if IsTTY(os.Stderr) {
-		fmt.Fprintf(os.Stderr, "\x1b[1m"+format+"\x1b[0m\n", args...)
-		return
-	}
-	Infof(format, args...)
+	fmt.Fprintln(os.Stderr, sgr("1", fmt.Sprintf(format, args...)))
 }
 
-// Warnf prints a warning to stderr.
+// Warnf prints a warning to stderr, with the severity highlighted so it
+// stands out from ordinary step narration.
 func Warnf(format string, args ...any) {
-	fmt.Fprintf(os.Stderr, "twig: warning: "+format+"\n", args...)
+	fmt.Fprintln(os.Stderr, dim("twig:")+" "+sgr("33", "warning:")+" "+fmt.Sprintf(format, args...))
 }
 
-// Errorf prints an error to stderr.
+// Errorf prints an error to stderr; the "twig:" prefix is reddened so
+// failures jump out of the log.
 func Errorf(format string, args ...any) {
-	fmt.Fprintf(os.Stderr, "twig: "+format+"\n", args...)
+	fmt.Fprintln(os.Stderr, sgr("31", "twig:")+" "+fmt.Sprintf(format, args...))
+}
+
+// sgr wraps s in an ANSI SGR code when stderr is a terminal, and returns it
+// untouched otherwise so piped or redirected output stays free of escapes.
+func sgr(code, s string) string {
+	if !IsTTY(os.Stderr) {
+		return s
+	}
+	return "\x1b[" + code + "m" + s + "\x1b[0m"
+}
+
+// dim renders s faintly on a terminal (used for the "twig:" prefix).
+func dim(s string) string { return sgr("2", s) }
+
+// Tilde shortens an absolute path under the user's home directory to its ~
+// form for display only — never feed the result back to anything that needs
+// a real path (e.g. the path `twig cd` writes to stdout).
+func Tilde(path string) string {
+	home, err := os.UserHomeDir()
+	if err != nil || home == "" {
+		return path
+	}
+	if path == home {
+		return "~"
+	}
+	if rest, ok := strings.CutPrefix(path, home+string(os.PathSeparator)); ok {
+		return "~" + string(os.PathSeparator) + rest
+	}
+	return path
 }
 
 // IsTTY reports whether f is attached to a terminal.

@@ -112,28 +112,44 @@ func Search(frag string, repos []string) []Match {
 	return all[:cut]
 }
 
-// CreateWorktree fetches the matched branch and checks it out as a new
-// worktree at the dirTemplate location ({{branch}} with /→-, {{slug}} =
-// last segment) relative to the repo's main worktree. Returns the new path.
-func CreateWorktree(m Match, dirTemplate string) (string, error) {
+// CreateWorktree makes the matched branch reachable as a local worktree and
+// returns its path. If the branch is already checked out in a worktree of
+// the repo it returns that existing path with reused=true (git allows only
+// one worktree per branch, so this is both the correct answer and what the
+// user wants — land in the work that already exists). Otherwise it fetches
+// the branch and checks it out at the dirTemplate location ({{branch}} with
+// /→-, {{slug}} = last segment) relative to the repo's main worktree.
+func CreateWorktree(m Match, dirTemplate string) (path string, reused bool, err error) {
+	// The branch may already be checked out — common when a cloud session's
+	// branch was picked up earlier, possibly from a different directory.
+	// `git worktree add` would refuse a second worktree for it; reuse the
+	// existing one instead of failing.
+	if existing, ok, stale := existingCheckout(m); ok {
+		return existing, true, nil
+	} else if stale {
+		if err := gitx.Prune(m.RepoDir); err != nil {
+			return "", false, err
+		}
+	}
+
 	wts, err := gitx.Worktrees(m.RepoDir)
 	if err != nil || len(wts) == 0 {
-		return "", fmt.Errorf("cannot determine main worktree of %s: %v", m.RepoDir, err)
+		return "", false, fmt.Errorf("cannot determine main worktree of %s: %v", m.RepoDir, err)
 	}
 	mainRoot := wts[0].Path
 
 	loc := strings.ReplaceAll(dirTemplate, "{{branch}}", strings.ReplaceAll(m.Branch, "/", "-"))
 	loc = strings.ReplaceAll(loc, "{{slug}}", lastSegment(m.Branch))
-	path := loc
+	path = loc
 	if !filepath.IsAbs(path) {
 		path = filepath.Join(mainRoot, loc)
 	}
 	if _, err := os.Stat(path); err == nil {
-		return "", fmt.Errorf("worktree target already exists: %s", path)
+		return "", false, fmt.Errorf("worktree target already exists: %s", path)
 	}
 
 	if err := gitx.Fetch(m.RepoDir, m.Remote, m.Branch); err != nil {
-		return "", err
+		return "", false, err
 	}
 	if gitx.BranchExists(m.RepoDir, m.Branch) {
 		err = gitx.AddWorktree(m.RepoDir, path, m.Branch)
@@ -141,9 +157,44 @@ func CreateWorktree(m Match, dirTemplate string) (string, error) {
 		err = gitx.AddWorktreeTracking(m.RepoDir, path, m.Branch, m.Remote)
 	}
 	if err != nil {
-		return "", err
+		return "", false, err
 	}
-	return path, nil
+	return path, false, nil
+}
+
+// ExistingCheckout returns the path of a worktree in the match's repo that
+// already has the branch checked out, if any. git permits only one worktree
+// per branch, so when this hits there is nothing to fetch or create — the
+// caller can enter the returned path directly, no confirmation needed.
+func ExistingCheckout(m Match) (string, bool) {
+	path, ok, _ := existingCheckout(m)
+	return path, ok
+}
+
+func existingCheckout(m Match) (path string, ok bool, stale bool) {
+	wts, err := gitx.Worktrees(m.RepoDir)
+	if err != nil {
+		return "", false, false
+	}
+	for _, wt := range wts {
+		if wt.Branch == "" || wt.Branch != m.Branch {
+			continue
+		}
+		if staleWorktree(wt) {
+			stale = true
+			continue
+		}
+		return wt.Path, true, stale
+	}
+	return "", false, stale
+}
+
+func staleWorktree(wt gitx.Worktree) bool {
+	if wt.Prunable {
+		return true
+	}
+	fi, err := os.Stat(wt.Path)
+	return err != nil || !fi.IsDir()
 }
 
 func hasGit(dir string) bool {

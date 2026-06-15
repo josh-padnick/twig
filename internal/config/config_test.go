@@ -34,6 +34,9 @@ func TestLoadMissingFileGivesDefaults(t *testing.T) {
 	if !cfg.SetupAuto() {
 		t.Error("setup.auto should default to true")
 	}
+	if !cfg.RemoteConfirmBeforeFetch() {
+		t.Error("remote.confirm_before_fetch should default to true")
+	}
 }
 
 func TestLoadPartialFileKeepsOtherDefaults(t *testing.T) {
@@ -105,9 +108,11 @@ command = "cursor {{dir}}"
 kind = "ghostty"
 clear = false
 delay_ms = 500
+reuse_window = true
 
 [remote]
-auto = true
+auto_include = true
+confirm_before_fetch = false
 dir = "wt/{{slug}}"
 `))
 	if err != nil || len(warnings) != 0 {
@@ -118,10 +123,10 @@ dir = "wt/{{slug}}"
 		t.Errorf("cursor opener = %+v", cursor)
 	}
 	gh := cfg.Open.Openers["ghostty"]
-	if gh.Clear == nil || *gh.Clear || gh.DelayMs == nil || *gh.DelayMs != 500 {
+	if gh.Clear == nil || *gh.Clear || gh.DelayMs == nil || *gh.DelayMs != 500 || !gh.ReuseWindow {
 		t.Errorf("ghostty opener = %+v", gh)
 	}
-	if !cfg.Remote.Auto || cfg.Remote.Dir != "wt/{{slug}}" {
+	if !cfg.Remote.AutoInclude || cfg.RemoteConfirmBeforeFetch() || cfg.Remote.Dir != "wt/{{slug}}" {
 		t.Errorf("remote = %+v", cfg.Remote)
 	}
 }
