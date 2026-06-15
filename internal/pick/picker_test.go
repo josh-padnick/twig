@@ -3,17 +3,39 @@ package pick
 import (
 	"bytes"
 	"errors"
+	"os"
 	"strings"
 	"testing"
+	"time"
 )
 
 // pickRun feeds raw key bytes to the picker core and returns the selected
 // index plus everything drawn, so tests can assert on both.
 func pickRun(t *testing.T, keys string, items []string) (int, string, error) {
 	t.Helper()
+	return pickRunRows(t, keys, items, 0)
+}
+
+func pickRunRows(t *testing.T, keys string, items []string, maxRows int) (int, string, error) {
+	t.Helper()
 	var out bytes.Buffer
-	idx, err := runPicker(strings.NewReader(keys), &out, "Pick one:", items, func(s string) string { return s })
+	idx, err := runPicker(strings.NewReader(keys), &out, "Pick one:", items, func(s string) string { return s }, maxRows)
 	return idx, out.String(), err
+}
+
+type escThenBlockReader struct {
+	unblock chan struct{}
+	sentEsc bool
+}
+
+func (r *escThenBlockReader) Read(p []byte) (int, error) {
+	if !r.sentEsc {
+		r.sentEsc = true
+		p[0] = 0x1b
+		return 1, nil
+	}
+	<-r.unblock
+	return 0, errors.New("unblocked")
 }
 
 func TestPickerArrowsAndEnter(t *testing.T) {
@@ -58,10 +80,77 @@ func TestPickerNumberJumpSelects(t *testing.T) {
 
 func TestPickerCancel(t *testing.T) {
 	items := []string{"alpha", "beta"}
-	for _, keys := range []string{"q", "\x03" /* Ctrl-C */} {
+	for _, keys := range []string{"q", "\x03" /* Ctrl-C */, "\x1b" /* Esc */} {
 		if _, _, err := pickRun(t, keys, items); !errors.Is(err, ErrCancelled) {
 			t.Errorf("keys %q: err = %v, want ErrCancelled", keys, err)
 		}
+	}
+}
+
+func TestPickerBareEscCancelsWithoutMoreInput(t *testing.T) {
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer r.Close()
+	defer w.Close()
+
+	done := make(chan error, 1)
+	go func() {
+		var out bytes.Buffer
+		_, err := runPicker(r, &out, "Pick one:", []string{"alpha", "beta"}, func(s string) string { return s }, 0)
+		done <- err
+	}()
+
+	if _, err := w.Write([]byte{0x1b}); err != nil {
+		t.Fatal(err)
+	}
+
+	select {
+	case err := <-done:
+		if !errors.Is(err, ErrCancelled) {
+			t.Fatalf("err = %v, want ErrCancelled", err)
+		}
+	case <-time.After(500 * time.Millisecond):
+		t.Fatal("picker blocked after bare Esc")
+	}
+}
+
+func TestPickerBareEscCancelsWhenDeadlineUnsupported(t *testing.T) {
+	r := &escThenBlockReader{unblock: make(chan struct{})}
+	defer close(r.unblock)
+
+	done := make(chan error, 1)
+	go func() {
+		var out bytes.Buffer
+		_, err := runPicker(r, &out, "Pick one:", []string{"alpha", "beta"}, func(s string) string { return s }, 0)
+		done <- err
+	}()
+
+	select {
+	case err := <-done:
+		if !errors.Is(err, ErrCancelled) {
+			t.Fatalf("err = %v, want ErrCancelled", err)
+		}
+	case <-time.After(500 * time.Millisecond):
+		t.Fatal("picker blocked after bare Esc without read deadlines")
+	}
+}
+
+func TestPickerRedrawsBoundedViewport(t *testing.T) {
+	items := []string{"alpha", "beta", "gamma", "delta"}
+	idx, out, err := pickRunRows(t, "jj\r", items, 2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if idx != 2 {
+		t.Fatalf("idx = %d, want 2", idx)
+	}
+	if !strings.Contains(out, "gamma") {
+		t.Fatalf("output missing selected item; got:\n%s", out)
+	}
+	if strings.Contains(out, "delta") {
+		t.Fatalf("bounded viewport rendered offscreen item; got:\n%s", out)
 	}
 }
 
