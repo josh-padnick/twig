@@ -24,7 +24,8 @@ func newCdCmd() *cobra.Command {
 			}
 			remoteFlag, _ := cmd.Flags().GetBool("remote")
 			verbose, _ := cmd.Flags().GetBool("verbose")
-			c, err := resolveFragmentOrRemote(frag, remoteFlag, verbose)
+			session, _ := cmd.Flags().GetBool("session")
+			c, err := resolveEntry(frag, session, remoteFlag, verbose)
 			if err != nil {
 				return err
 			}
@@ -33,6 +34,8 @@ func newCdCmd() *cobra.Command {
 		},
 	}
 	cmd.Flags().BoolP("remote", "r", false, "search remote branches when nothing matches locally")
+	cmd.Flags().BoolP("session", "s", false, "treat the argument as a Codex session title to fuzzy-match")
 	cmd.Flags().BoolP("verbose", "v", false, "narrate each resolution step and scan location checked")
+	cmd.MarkFlagsMutuallyExclusive("session", "remote")
 	return cmd
 }

@@ -81,6 +81,28 @@ func TestBareCodexThreadSurfacesStaleCwd(t *testing.T) {
 	}
 }
 
+func TestCdSessionTitleSearchPrintsCwd(t *testing.T) {
+	f := testutil.StandardFixture(t)
+	isolate(t, f)
+	t.Chdir(f.Tmp)
+
+	id := "019eccfa-62f5-7733-8fc0-059abf2ea60b"
+	writeCodexSession(t, f.Home, id, f.App) // f.App exists, so the cwd is live
+	writeCodexIndex(t, f.Home, id, "Frame PR 142 review")
+
+	root := newRootCmd("test", "test")
+	var out bytes.Buffer
+	root.SetOut(&out)
+	root.SetErr(&bytes.Buffer{})
+	root.SetArgs([]string{"cd", "-s", "frame pr 142"})
+	if err := root.Execute(); err != nil {
+		t.Fatal(err)
+	}
+	if got, want := out.String(), f.App+"\n"; got != want {
+		t.Errorf("stdout = %q, want %q", got, want)
+	}
+}
+
 func writeCodexSession(t *testing.T, home, id, cwd string) {
 	t.Helper()
 	dir := filepath.Join(home, ".codex", "sessions", "2026", "06", "15")
@@ -91,6 +113,18 @@ func writeCodexSession(t *testing.T, home, id, cwd string) {
 `
 	path := filepath.Join(dir, "rollout-2026-06-15T13-30-21-"+id+".jsonl")
 	if err := os.WriteFile(path, []byte(body), 0o644); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func writeCodexIndex(t *testing.T, home, id, title string) {
+	t.Helper()
+	dir := filepath.Join(home, ".codex")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	line := `{"id":"` + id + `","thread_name":"` + title + `","updated_at":"2026-06-15T20:30:42Z"}` + "\n"
+	if err := os.WriteFile(filepath.Join(dir, "session_index.jsonl"), []byte(line), 0o644); err != nil {
 		t.Fatal(err)
 	}
 }

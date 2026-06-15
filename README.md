@@ -75,6 +75,7 @@ twig -t <fragment>     # enter in the current tab instead
 twig -r <fragment>     # also search remote branches (Claude Code web, Codex cloud)
 twig <pr-url>          # open a GitHub PR's branch (e.g. .../pull/140)
 twig codex://threads/<id>  # open where a local Codex session ran
+twig -s "frame pr 142"     # ...or find that Codex session by its title
 twig -v <fragment>     # narrate each step and scan location checked
 tw <fragment>          # cd in place (via shell-init)
 twig list              # everything twig can see, with branch + status

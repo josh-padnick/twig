@@ -30,6 +30,33 @@ twig 019eccfa-62f5-7733-8fc0-059abf2ea60b   # same thing
 tw codex://threads/019eccfa-62f5-7733-8fc0-059abf2ea60b   # cd in place
 ```
 
+## By title: `-s`
+
+When you don't have the link handy, search by the session's title with
+`-s`. Quote it, since titles have spaces:
+
+```sh
+twig -s "frame pr 142"
+# twig: Codex session "Frame PR 142 review" ran in ~/Code/fabricahq/app
+# twig: opening ~/Code/fabricahq/app with ghostty
+```
+
+Matching is case-insensitive and tiered: an exact title wins outright, then
+a substring of the title, then a title containing every word you typed (in
+any order). Several matches open the [picker](../guides/resolution.md),
+most-recently-updated first, each showing where it lands:
+
+```sh
+twig -s frame
+# 2 Codex sessions match "frame" — select one:
+#   Frame PR 145 review  [~/Code/fabricahq/app]
+#   Frame PR 142 review  [~/Code/fabricahq/app]
+```
+
+`-s` works on `twig`, `twig cd`, and `tw`. It only searches **local Codex**
+session titles (from `~/.codex/session_index.jsonl`) — it doesn't touch
+branch or directory resolution.
+
 ## How it works
 
 1. A `codex://threads/<id>` URL is an explicit pointer, so it resolves
@@ -48,7 +75,13 @@ used: often a main repo, sometimes a worktree another tool created. If
 that directory has since been removed, twig says so rather than entering
 nothing.
 
-## Out of scope (for now)
+`-s` reads the same logs, after first matching your text against the
+titles in `~/.codex/session_index.jsonl` to pick which session's `cwd` to
+resolve.
 
-twig resolves a session by its **id**, not its thread name — names aren't
-stable handles, and the id is what Codex puts in the shareable link.
+## Scope
+
+Title search covers **local Codex only**. Claude Code and Conductor
+worktrees already have a slug or branch you can name as an ordinary
+[fragment](../guides/resolution.md), and Codex *cloud* sessions are
+branches reached with [`-r`](../guides/remote-pickup.md).
