@@ -46,6 +46,11 @@ repos you already have, fetches the branch, and builds the worktree — or
 hand twig the PR's GitHub URL (`twig https://github.com/org/app/pull/140`)
 and it finds the head branch for you.
 
+Local Codex sessions are different again: they don't make a worktree, they
+just run in a directory you already have. Hand twig the session's thread
+link — `twig codex://threads/<id>` — and it reads the session's log to jump
+to wherever it was working.
+
 ## Install
 
 ```sh
@@ -67,8 +72,9 @@ twig init              # interactive first-run setup (roots, openers, shell)
 twig <fragment>        # open the matching worktree (new Ghostty window)
 twig                   # inside a repo: pick among its worktrees
 twig -t <fragment>     # enter in the current tab instead
-twig -r <fragment>     # also search remote branches (Claude Code web, Codex)
+twig -r <fragment>     # also search remote branches (Claude Code web, Codex cloud)
 twig <pr-url>          # open a GitHub PR's branch (e.g. .../pull/140)
+twig codex://threads/<id>  # open where a local Codex session ran
 twig -v <fragment>     # narrate each step and scan location checked
 tw <fragment>          # cd in place (via shell-init)
 twig list              # everything twig can see, with branch + status

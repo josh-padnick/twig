@@ -18,12 +18,16 @@ worth knowing: it leaves a renamed workspace behind as a symlink to the
 new name. twig follows those and collapses duplicates to the canonical
 path.
 
-## Codex and cloud sessions
+## Codex sessions
 
-Codex keeps no local worktree directory. Its cloud sessions, like Claude
-Code web sessions, exist as branches on GitHub, so they're covered by
-[remote branch pickup](../guides/remote-pickup.md) rather than a
-provider.
+Codex keeps no local worktree directory, so it has no provider. Its two
+session kinds are reached another way instead:
+
+- **Cloud** sessions, like Claude Code web sessions, exist as branches on
+  GitHub — [remote branch pickup](../guides/remote-pickup.md) fetches them.
+- **Local** sessions run in a directory you already have and record it in
+  their log; `twig codex://threads/<id>` reads that to take you there. See
+  [Codex local sessions](../guides/codex-sessions.md).
 
 ## Trimming the set
 

@@ -24,6 +24,7 @@ const (
 	SourceGit                   // matched via `git worktree list` of the current repo
 	SourceScan                  // matched by scanning provider locations and roots
 	SourceRemote                // worktree created by remote-branch pickup
+	SourceCodex                 // directory a local Codex session ran in
 )
 
 // Tier ranks how a candidate matched; lower is stronger. Exact tiers

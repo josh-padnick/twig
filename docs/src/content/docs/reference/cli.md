@@ -16,6 +16,11 @@ The fragment can also be a **GitHub pull request URL** —
 exactly as `twig -r <branch>` would, no `-r` needed. See
 [remote pickup](../guides/remote-pickup.md#pull-request-urls).
 
+The fragment can also be a **Codex thread link** —
+`twig codex://threads/<id>` (or a bare thread id) opens the directory that
+local Codex session ran in. See
+[Codex local sessions](../guides/codex-sessions.md).
+
 | Flag | Meaning |
 | --- | --- |
 | `-t, --tab` | enter in the current tab instead of a new window |

@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/josh-padnick/twig/internal/codex"
 	"github.com/josh-padnick/twig/internal/config"
 	"github.com/josh-padnick/twig/internal/pick"
 	"github.com/josh-padnick/twig/internal/remote"
@@ -20,18 +21,28 @@ import (
 // optionally falls through to remote pickup. Every other error (ambiguity,
 // stale records, git failures) passes through untouched.
 //
-// A GitHub pull request URL short-circuits all of this: it's an explicit
-// request for one PR's remote branch, so twig resolves it straight to a
-// worktree with no -r flag and no local-scan detour when git can identify that
-// branch safely.
+// Two kinds of explicit pointer short-circuit all of this. A GitHub pull
+// request URL resolves straight to that PR's remote branch (no -r, no
+// local-scan detour) when git can identify the branch safely. A
+// codex://threads/<id> URI resolves straight to the directory that local
+// Codex session ran in. A bare Codex thread id is tried only as a last-resort
+// fallback after a local miss, so it can't shadow a real worktree.
 func resolveFragmentOrRemote(frag string, remoteFlag, verbose bool) (resolve.Candidate, error) {
 	if pr, ok := remote.ParsePullURL(frag); ok {
 		return pickupPullRequest(pr)
+	}
+	if id, ok := codex.ParseThreadURI(frag); ok {
+		return resolveCodexThread(id)
 	}
 	c, err := resolveFragment(frag, verbose)
 	var noMatch *resolve.NoMatchError
 	if err == nil || !errors.As(err, &noMatch) {
 		return c, err
+	}
+	if id, ok := codex.ThreadID(frag); ok {
+		if cand, cerr := resolveCodexThread(id); cerr == nil {
+			return cand, nil
+		}
 	}
 	cfg, cfgErr := loadConfig()
 	if cfgErr != nil {

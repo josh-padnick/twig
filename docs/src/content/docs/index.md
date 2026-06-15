@@ -83,6 +83,11 @@ falls through to `git ls-remote` across repos you already have; twig
 fetches the branch and builds the worktree for you.
 [Remote pickup.](guides/remote-pickup.md)
 
+Local Codex sessions resolve by their thread link. A local Codex session
+runs in a directory rather than making its own worktree, so
+`twig codex://threads/<id>` reads the session's log and jumps to wherever
+it was working. [Codex local sessions.](guides/codex-sessions.md)
+
 ## What twig deliberately isn't
 
 - A git replacement. Branch management stays git's job. Even `twig rm`
@@ -90,8 +95,9 @@ fetches the branch and builds the worktree for you.
 - A daemon or shell hijack. It's a single static binary plus an optional
   three-line shell function; nothing runs in the background.
 - Configuration-hungry. Conductor and Claude Code layouts work with zero
-  config, Codex cloud branches are one `-r` away, and `twig init`
-  generates the rest in about thirty seconds.
+  config, Codex cloud branches are one `-r` away, local Codex sessions
+  resolve from their thread link, and `twig init` generates the rest in
+  about thirty seconds.
 
 ## Where to start
 
