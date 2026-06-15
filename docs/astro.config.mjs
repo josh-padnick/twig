@@ -62,6 +62,7 @@ export default defineConfig({
             { slug: 'guides/openers' },
             { slug: 'guides/providers' },
             { slug: 'guides/remote-pickup' },
+            { slug: 'guides/codex-sessions' },
             { slug: 'guides/shell-integration' },
           ],
         },

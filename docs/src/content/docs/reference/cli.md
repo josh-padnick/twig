@@ -16,10 +16,17 @@ The fragment can also be a **GitHub pull request URL** —
 exactly as `twig -r <branch>` would, no `-r` needed. See
 [remote pickup](../guides/remote-pickup.md#pull-request-urls).
 
+The fragment can also be a **Codex thread link** —
+`twig codex://threads/<id>` (or a bare thread id) opens the directory that
+local Codex session ran in. With `-s` the argument is instead a Codex
+session **title** to fuzzy-match (`twig -s "frame pr 142"`). See
+[Codex local sessions](../guides/codex-sessions.md).
+
 | Flag | Meaning |
 | --- | --- |
 | `-t, --tab` | enter in the current tab instead of a new window |
 | `-r, --remote` | search remote branches when nothing matches locally |
+| `-s, --session` | treat the argument as a Codex session title to fuzzy-match |
 | `-v, --verbose` | narrate each resolution step and scan location checked |
 | `--run` | run the `[run]` script after setup succeeds |
 | `--setup` | force the setup script to re-run |
@@ -44,8 +51,8 @@ wizard automatically.
 ## twig cd [fragment]
 
 Prints the resolved worktree path on stdout and nothing else, for
-`cd "$(twig cd foo)"`. Supports `-r`, `-v`, and PR-URL fragments. With no
-fragment, picks among the current repo's worktrees.
+`cd "$(twig cd foo)"`. Supports `-r`, `-s`, `-v`, PR-URL, and Codex-thread
+fragments. With no fragment, picks among the current repo's worktrees.
 
 ## twig enter [dir] [--run] [--setup] [--no-setup]
 

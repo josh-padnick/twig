@@ -26,6 +26,7 @@ type openFlags struct {
 	forceSetup bool
 	noSetup    bool
 	remote     bool
+	session    bool
 	verbose    bool
 	with       []string
 }
@@ -36,9 +37,11 @@ func addOpenFlags(cmd *cobra.Command, f *openFlags) {
 	cmd.Flags().BoolVar(&f.forceSetup, "setup", false, "force the setup script to re-run")
 	cmd.Flags().BoolVar(&f.noSetup, "no-setup", false, "skip setup entirely")
 	cmd.Flags().BoolVarP(&f.remote, "remote", "r", false, "search remote branches when nothing matches locally")
+	cmd.Flags().BoolVarP(&f.session, "session", "s", false, "treat the argument as a Codex session title to fuzzy-match")
 	cmd.Flags().BoolVarP(&f.verbose, "verbose", "v", false, "narrate each resolution step and scan location checked")
 	cmd.Flags().StringSliceVar(&f.with, "with", nil, "openers to run (overrides the configured set)")
 	cmd.MarkFlagsMutuallyExclusive("setup", "no-setup")
+	cmd.MarkFlagsMutuallyExclusive("session", "remote")
 }
 
 func newOpenCmd() *cobra.Command {
@@ -62,7 +65,7 @@ func newOpenCmd() *cobra.Command {
 // runOpen is the shared implementation behind `twig open` and bare
 // `twig <fragment>`.
 func runOpen(frag string, f openFlags) error {
-	c, err := resolveFragmentOrRemote(frag, f.remote, f.verbose)
+	c, err := resolveEntry(frag, f.session, f.remote, f.verbose)
 	if err != nil {
 		// First-run experience: an interactive miss with no config file on
 		// disk is almost always missing roots — offer the wizard, then
