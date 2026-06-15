@@ -82,23 +82,64 @@ func Remotes(repoDir string) ([]string, error) {
 	return strings.Split(out, "\n"), nil
 }
 
-// LsRemoteHeads lists short branch names on the named remote. This is a
-// network call (or a filesystem read for path remotes).
-func LsRemoteHeads(repoDir, remote string) ([]string, error) {
+// RemoteHead is one branch on a remote together with the commit it points
+// at, as reported by `git ls-remote`.
+type RemoteHead struct {
+	Branch string
+	SHA    string
+}
+
+// LsRemoteHeadRefs lists the remote's branch heads with their commit SHAs.
+// This is a network call (or a filesystem read for path remotes).
+func LsRemoteHeadRefs(repoDir, remote string) ([]RemoteHead, error) {
 	out, err := run(repoDir, "ls-remote", "--heads", remote)
 	if err != nil {
 		return nil, err
 	}
-	var branches []string
+	var heads []RemoteHead
 	for _, line := range strings.Split(out, "\n") {
 		// Lines look like "<sha>\trefs/heads/<branch>".
-		if _, ref, ok := strings.Cut(line, "\t"); ok {
-			if branch, ok := strings.CutPrefix(ref, "refs/heads/"); ok {
-				branches = append(branches, branch)
-			}
+		sha, ref, ok := strings.Cut(line, "\t")
+		if !ok {
+			continue
+		}
+		if branch, ok := strings.CutPrefix(ref, "refs/heads/"); ok {
+			heads = append(heads, RemoteHead{Branch: branch, SHA: sha})
 		}
 	}
+	return heads, nil
+}
+
+// LsRemoteHeads lists short branch names on the named remote.
+func LsRemoteHeads(repoDir, remote string) ([]string, error) {
+	heads, err := LsRemoteHeadRefs(repoDir, remote)
+	if err != nil {
+		return nil, err
+	}
+	var branches []string
+	for _, h := range heads {
+		branches = append(branches, h.Branch)
+	}
 	return branches, nil
+}
+
+// LsRemotePullHead returns the commit SHA that a pull request's head ref
+// (refs/pull/<n>/head) points at on the remote, or "" when the remote
+// exposes no such ref. GitHub maintains this ref for every PR — fork PRs
+// included — so it works without any API token.
+func LsRemotePullHead(repoDir, remote string, number int) (string, error) {
+	ref := fmt.Sprintf("refs/pull/%d/head", number)
+	out, err := run(repoDir, "ls-remote", remote, ref)
+	if err != nil {
+		return "", err
+	}
+	sha, _, _ := strings.Cut(out, "\t")
+	return strings.TrimSpace(sha), nil
+}
+
+// RemoteURL returns the fetch URL configured for the named remote.
+func RemoteURL(repoDir, remote string) (string, error) {
+	return run(repoDir, "remote", "get-url", remote)
 }
 
 // Fetch fetches one branch from the named remote.

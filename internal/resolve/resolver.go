@@ -64,6 +64,34 @@ type Resolver struct {
 	Home      string // used for ~ expansion and provider fixed locations
 	Roots     []string
 	Providers []Provider
+	// Trace, when non-nil, receives human-readable progress lines as the
+	// resolver works: the steps it tries and the scan locations it checks.
+	// Pure resolution leaves it nil (the default); the CLI wires it to
+	// ui.Stepf under -v/--verbose so the search is visible on demand.
+	Trace func(string)
+}
+
+// trace emits one progress line when a Trace hook is installed, and is a
+// no-op otherwise so resolution stays pure by default.
+func (r *Resolver) trace(format string, args ...any) {
+	if r.Trace != nil {
+		r.Trace(fmt.Sprintf(format, args...))
+	}
+}
+
+// homeRel shortens an absolute path under Home to its ~ form, for trace
+// messages only. Unlike ui.Tilde it uses the resolver's own Home so it
+// stays correct under the fake homes that tests construct.
+func (r *Resolver) homeRel(p string) string {
+	if r.Home != "" {
+		if p == r.Home {
+			return "~"
+		}
+		if rest, ok := strings.CutPrefix(p, r.Home+string(filepath.Separator)); ok {
+			return "~" + string(filepath.Separator) + rest
+		}
+	}
+	return p
 }
 
 // NoMatchError reports that nothing matched, naming what was searched so
@@ -120,7 +148,9 @@ func (r *Resolver) Resolve(frag string) (Result, error) {
 	if frag == "" {
 		return r.resolveNoArg()
 	}
+	r.trace("resolving %q", frag)
 	if c, ok := r.literal(frag); ok {
+		r.trace("matched an existing path: %s", r.homeRel(c.Path))
 		return Result{Chosen: &c}, nil
 	}
 	res, matched, err := r.viaGit(frag)
@@ -182,6 +212,7 @@ func (r *Resolver) viaGit(frag string) (res Result, matched bool, err error) {
 	if gerr != nil {
 		return Result{}, false, gerr
 	}
+	r.trace("checking the current repo's %d worktree(s)", len(wts))
 	byTier := map[Tier][]Candidate{}
 	var staleMatches []string
 	for _, wt := range wts {
@@ -196,6 +227,7 @@ func (r *Resolver) viaGit(frag string) (res Result, matched bool, err error) {
 		byTier[tier] = append(byTier[tier], Candidate{Path: wt.Path, Branch: wt.Branch, Source: SourceGit, Tier: tier})
 	}
 	if best, ok := bestTier(byTier); ok {
+		r.trace("matched %d worktree(s) of the current repo", len(best))
 		res, err := finishTier(best)
 		return res, true, err
 	}

@@ -23,7 +23,8 @@ func newCdCmd() *cobra.Command {
 				frag = args[0]
 			}
 			remoteFlag, _ := cmd.Flags().GetBool("remote")
-			c, err := resolveFragmentOrRemote(frag, remoteFlag)
+			verbose, _ := cmd.Flags().GetBool("verbose")
+			c, err := resolveFragmentOrRemote(frag, remoteFlag, verbose)
 			if err != nil {
 				return err
 			}
@@ -32,5 +33,6 @@ func newCdCmd() *cobra.Command {
 		},
 	}
 	cmd.Flags().BoolP("remote", "r", false, "search remote branches when nothing matches locally")
+	cmd.Flags().BoolP("verbose", "v", false, "narrate each resolution step and scan location checked")
 	return cmd
 }

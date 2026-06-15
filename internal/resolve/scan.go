@@ -19,7 +19,10 @@ import (
 func (r *Resolver) viaScan(frag string) (Result, error) {
 	s := strings.ToLower(lastSegment(frag))
 	byTier := map[Tier][]Candidate{}
-	for _, parent := range r.scanParents() {
+	parents := r.scanParents()
+	r.trace("scanning %d worktree location(s) under your roots and providers", len(parents))
+	for _, parent := range parents {
+		r.trace("checking %s", r.homeRel(parent))
 		for _, dir := range subdirs(parent) {
 			base := strings.ToLower(filepath.Base(dir))
 			var tier Tier
@@ -39,6 +42,7 @@ func (r *Resolver) viaScan(frag string) (Result, error) {
 	}
 	best, ok := bestTier(byTier)
 	if !ok {
+		r.trace("no match under any scanned location")
 		return Result{}, &NoMatchError{
 			Fragment:    frag,
 			SearchedGit: gitx.InRepo(r.Cwd),
@@ -46,6 +50,7 @@ func (r *Resolver) viaScan(frag string) (Result, error) {
 			Providers:   providerNames(r.Providers),
 		}
 	}
+	r.trace("matched %d worktree(s) by scan", len(best))
 	res, err := finishTier(best)
 	if err != nil {
 		return Result{}, err

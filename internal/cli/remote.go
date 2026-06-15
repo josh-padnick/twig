@@ -19,8 +19,15 @@ import (
 // resolveFragmentOrRemote resolves locally first; on a clean no-match it
 // optionally falls through to remote pickup. Every other error (ambiguity,
 // stale records, git failures) passes through untouched.
-func resolveFragmentOrRemote(frag string, remoteFlag bool) (resolve.Candidate, error) {
-	c, err := resolveFragment(frag)
+//
+// A GitHub pull request URL short-circuits all of this: it's an unambiguous
+// pointer to a remote branch, so twig resolves it straight to a worktree with
+// no -r flag and no local-scan detour.
+func resolveFragmentOrRemote(frag string, remoteFlag, verbose bool) (resolve.Candidate, error) {
+	if pr, ok := remote.ParsePullURL(frag); ok {
+		return pickupPullRequest(pr)
+	}
+	c, err := resolveFragment(frag, verbose)
 	var noMatch *resolve.NoMatchError
 	if err == nil || !errors.As(err, &noMatch) {
 		return c, err
@@ -68,6 +75,50 @@ func pickupRemote(frag string, noMatchErr error) (resolve.Candidate, error) {
 		return zero, err
 	}
 	ui.Stepf("found %s on %s of %s", m.Branch, m.Remote, ui.Tilde(m.RepoDir))
+	return enterMatch(m, cfg)
+}
+
+// pickupPullRequest turns a parsed PR URL into a worktree: it identifies the
+// PR's head branch via the local repo whose remote is that GitHub repo, then
+// hands off to the same fetch → confirm → worktree path as -r pickup.
+func pickupPullRequest(pr remote.PullRequest) (resolve.Candidate, error) {
+	var zero resolve.Candidate
+	cfg, err := loadConfig()
+	if err != nil {
+		return zero, err
+	}
+	cwd, err := os.Getwd()
+	if err != nil {
+		return zero, err
+	}
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return zero, err
+	}
+
+	repos := remote.CandidateRepos(cwd, cfg.ExpandedRoots(home))
+	ui.Stepf("resolving PR #%d of %s/%s across %d local repo(s)…", pr.Number, pr.Owner, pr.Repo, len(repos))
+	matches, err := remote.ResolvePullRequest(pr, repos)
+	if err != nil {
+		return zero, err
+	}
+
+	m := matches[0]
+	if len(matches) > 1 {
+		// Several branches sit on the PR head commit; let the user disambiguate.
+		if m, err = pick.OneOf(matches, remote.DisplayMatch); err != nil {
+			return zero, err
+		}
+	}
+	ui.Stepf("PR #%d is %s on %s of %s", pr.Number, m.Branch, m.Remote, ui.Tilde(m.RepoDir))
+	return enterMatch(m, cfg)
+}
+
+// enterMatch carries a resolved remote branch the rest of the way: enter an
+// existing checkout untouched, otherwise confirm, fetch, and create the
+// worktree. Shared by fragment pickup (-r) and PR-URL pickup.
+func enterMatch(m remote.Match, cfg config.Config) (resolve.Candidate, error) {
+	var zero resolve.Candidate
 
 	// If the branch is already checked out, there's nothing to fetch or
 	// create — just enter it. No confirmation: this is non-destructive and

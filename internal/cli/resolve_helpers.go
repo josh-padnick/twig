@@ -21,8 +21,9 @@ func loadConfig() (config.Config, error) {
 }
 
 // newResolver constructs the resolver for the invoking process from the
-// user config: expanded roots and the selected providers.
-func newResolver() (*resolve.Resolver, error) {
+// user config: expanded roots and the selected providers. With verbose set,
+// the resolver narrates each step and scan location to stderr via ui.Stepf.
+func newResolver(verbose bool) (*resolve.Resolver, error) {
 	cwd, err := os.Getwd()
 	if err != nil {
 		return nil, err
@@ -35,18 +36,22 @@ func newResolver() (*resolve.Resolver, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &resolve.Resolver{
+	r := &resolve.Resolver{
 		Cwd:       cwd,
 		Home:      home,
 		Roots:     cfg.ExpandedRoots(home),
 		Providers: resolve.ByNames(cfg.Providers),
-	}, nil
+	}
+	if verbose {
+		r.Trace = func(msg string) { ui.Stepf("%s", msg) }
+	}
+	return r, nil
 }
 
 // resolveFragment resolves frag (possibly empty) to exactly one worktree,
 // running the interactive picker when several candidates tie.
-func resolveFragment(frag string) (resolve.Candidate, error) {
-	r, err := newResolver()
+func resolveFragment(frag string, verbose bool) (resolve.Candidate, error) {
+	r, err := newResolver(verbose)
 	if err != nil {
 		return resolve.Candidate{}, err
 	}

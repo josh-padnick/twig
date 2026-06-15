@@ -22,7 +22,7 @@ func newRmCmd() *cobra.Command {
 		Short: "Remove a worktree (git worktree remove + prune)",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			c, err := resolveFragment(args[0])
+			c, err := resolveFragment(args[0], false)
 			if err != nil {
 				return err
 			}

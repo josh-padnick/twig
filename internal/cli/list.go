@@ -19,7 +19,7 @@ func newListCmd() *cobra.Command {
 		Short: "List all known worktrees",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			r, err := newResolver()
+			r, err := newResolver(false)
 			if err != nil {
 				return err
 			}
