@@ -2,6 +2,7 @@
 package cli
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/josh-padnick/twig/internal/config"
@@ -62,5 +63,15 @@ func resolveFragment(frag string, verbose bool) (resolve.Candidate, error) {
 	if res.Chosen != nil {
 		return *res.Chosen, nil
 	}
-	return pick.One(res.Candidates)
+	return pick.One(res.Candidates, pickHeader(frag, len(res.Candidates)))
+}
+
+// pickHeader is the prompt shown above the worktree picker. With no fragment
+// (bare `twig` inside a repo) the list is simply this repo's worktrees;
+// otherwise it's the several worktrees that tied for the fragment.
+func pickHeader(frag string, n int) string {
+	if frag == "" {
+		return fmt.Sprintf("%d worktrees in this repo — select one to enter:", n)
+	}
+	return fmt.Sprintf("%d worktrees match %q — select one:", n, frag)
 }

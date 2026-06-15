@@ -57,7 +57,7 @@ One short command works anywhere. `twig <fragment>` checks the current
 repo's worktree list first (git already knows every worktree, wherever it
 lives on disk), then scans known tool locations and your configured roots.
 Exact matches beat substrings, branches beat directory names, and real
-ambiguity gets a fuzzy picker. Typing `gould` is enough.
+ambiguity gets a quick picker. Typing `gould` is enough.
 [How resolution works.](guides/resolution.md)
 
 Setup runs itself, but only when needed. A `twig.toml` committed at the
