@@ -110,6 +110,26 @@ func LsRemoteHeadRefs(repoDir, remote string) ([]RemoteHead, error) {
 	return heads, nil
 }
 
+// LsRemoteDefaultBranch returns the short branch name advertised as the
+// remote's HEAD, or "" when the remote does not expose a branch symref.
+func LsRemoteDefaultBranch(repoDir, remote string) (string, error) {
+	out, err := run(repoDir, "ls-remote", "--symref", remote, "HEAD")
+	if err != nil {
+		return "", err
+	}
+	for _, line := range strings.Split(out, "\n") {
+		// Symref lines look like "ref: refs/heads/<branch>\tHEAD".
+		ref, name, ok := strings.Cut(line, "\t")
+		if !ok || name != "HEAD" {
+			continue
+		}
+		if branch, ok := strings.CutPrefix(ref, "ref: refs/heads/"); ok {
+			return branch, nil
+		}
+	}
+	return "", nil
+}
+
 // LsRemoteHeads lists short branch names on the named remote.
 func LsRemoteHeads(repoDir, remote string) ([]string, error) {
 	heads, err := LsRemoteHeadRefs(repoDir, remote)

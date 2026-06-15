@@ -20,9 +20,10 @@ import (
 // optionally falls through to remote pickup. Every other error (ambiguity,
 // stale records, git failures) passes through untouched.
 //
-// A GitHub pull request URL short-circuits all of this: it's an unambiguous
-// pointer to a remote branch, so twig resolves it straight to a worktree with
-// no -r flag and no local-scan detour.
+// A GitHub pull request URL short-circuits all of this: it's an explicit
+// request for one PR's remote branch, so twig resolves it straight to a
+// worktree with no -r flag and no local-scan detour when git can identify that
+// branch safely.
 func resolveFragmentOrRemote(frag string, remoteFlag, verbose bool) (resolve.Candidate, error) {
 	if pr, ok := remote.ParsePullURL(frag); ok {
 		return pickupPullRequest(pr)
@@ -103,13 +104,10 @@ func pickupPullRequest(pr remote.PullRequest) (resolve.Candidate, error) {
 		return zero, err
 	}
 
-	m := matches[0]
-	if len(matches) > 1 {
-		// Several branches sit on the PR head commit; let the user disambiguate.
-		if m, err = pick.OneOf(matches, remote.DisplayMatch); err != nil {
-			return zero, err
-		}
+	if len(matches) != 1 {
+		return zero, fmt.Errorf("PR #%d resolved to %d branches; expected exactly one", pr.Number, len(matches))
 	}
+	m := matches[0]
 	ui.Stepf("PR #%d is %s on %s of %s", pr.Number, m.Branch, m.Remote, ui.Tilde(m.RepoDir))
 	return enterMatch(m, cfg)
 }

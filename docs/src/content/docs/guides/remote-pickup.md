@@ -76,15 +76,16 @@ token:
 2. It asks that remote where the PR head sits with
    `git ls-remote <remote> refs/pull/140/head` — a ref GitHub maintains for
    every PR.
-3. It maps that commit back to the branch of the same name on the remote,
+3. It maps that commit back to exactly one non-default branch on the remote,
    then fetches and creates the worktree as usual.
 
 Because the branch is recovered from the remote's own branch list, the head
 branch must live in **the same repository** and still exist. A PR opened
 from a fork, or one whose branch was deleted after merge, can't be resolved
-this way — fall back to naming the branch with `twig -r <branch>` if it's
-still around. And as with all remote pickup, the repository has to be on
-disk somewhere under your roots.
+this way. twig also refuses to guess when multiple non-default branches point
+at the PR head commit. Fall back to naming the branch with `twig -r <branch>`
+if it's still around. And as with all remote pickup, the repository has to be
+on disk somewhere under your roots.
 
 ## Configuration
 

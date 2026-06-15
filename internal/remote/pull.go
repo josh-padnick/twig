@@ -1,10 +1,11 @@
-// Pull-request pickup: a GitHub PR URL is an unambiguous pointer to a remote
-// branch, so twig accepts one in place of a fragment. It maps the URL back to
-// the PR's head branch using git alone — `git ls-remote refs/pull/<n>/head`
-// against the local checkout whose remote is that repo, then the matching
-// branch by SHA — so no GitHub API or token is involved. The head branch must
-// live in the same repo (fork PRs aren't resolvable this way) and still exist;
-// from there the normal fetch-and-worktree flow takes over.
+// Pull-request pickup: twig accepts a GitHub PR URL in place of a fragment and
+// resolves it to the PR's remote branch when git can do that safely. It maps
+// the URL back to the PR's head branch using git alone — `git ls-remote
+// refs/pull/<n>/head` against the local checkout whose remote is that repo,
+// then the matching unique non-default branch by SHA — so no GitHub API or
+// token is involved. The head branch must live in the same repo (fork PRs
+// aren't resolvable this way) and still exist; from there the normal
+// fetch-and-worktree flow takes over.
 package remote
 
 import (
@@ -67,9 +68,11 @@ func (e *PullError) Error() string {
 }
 
 // ResolvePullRequest finds the PR's head branch by asking the remotes of the
-// local repos that point at the PR's repo. It returns one Match per branch
-// whose tip is the PR head commit (normally exactly one); the caller fetches
-// and creates the worktree as it would for any remote-branch pickup.
+// local repos that point at the PR's repo. It only returns a match when the PR
+// head commit maps to exactly one non-default branch; if the branch was deleted
+// after a linear merge, refs/pull/<n>/head may equal the default branch tip, and
+// resolving that would enter the wrong worktree. The caller fetches and creates
+// the worktree as it would for any remote-branch pickup.
 func ResolvePullRequest(pr PullRequest, repos []string) ([]Match, error) {
 	foundRepo := false
 	for _, repo := range repos {
@@ -93,20 +96,27 @@ func ResolvePullRequest(pr PullRequest, repos []string) ([]Match, error) {
 			if err != nil || sha == "" {
 				continue
 			}
+			defaultBranch, err := gitx.LsRemoteDefaultBranch(repo, rem)
+			if err != nil {
+				continue
+			}
 			heads, err := gitx.LsRemoteHeadRefs(repo, rem)
 			if err != nil {
 				continue
 			}
 			var matches []Match
 			for _, h := range heads {
-				if h.SHA == sha {
+				if h.SHA == sha && h.Branch != defaultBranch {
 					matches = append(matches, Match{
 						RepoDir: repo, Remote: rem, Branch: h.Branch, Tier: resolve.TierExactBranch,
 					})
 				}
 			}
-			if len(matches) > 0 {
+			if len(matches) == 1 {
 				return matches, nil
+			}
+			if len(matches) > 1 {
+				return nil, &PullError{PR: pr, Reason: "more than one remote branch points at the PR head commit — can't choose safely without the PR head branch name"}
 			}
 		}
 	}

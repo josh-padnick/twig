@@ -135,6 +135,35 @@ func TestResolvePullRequestFindsHeadBranch(t *testing.T) {
 	}
 }
 
+func TestResolvePullRequestFailsWhenOnlyDefaultBranchMatchesPRHead(t *testing.T) {
+	f := newPullFixture(t, "claude/per-request-identity", 140)
+	pr := PullRequest{Host: "github.com", Owner: "fabricahq", Repo: "app", Number: 140, URL: "https://github.com/fabricahq/app/pull/140"}
+
+	sha := testutil.Git(t, f.origin, "rev-parse", "refs/heads/"+f.branch)
+	testutil.Git(t, f.origin, "update-ref", "refs/heads/main", sha)
+	testutil.Git(t, f.origin, "update-ref", "-d", "refs/heads/"+f.branch)
+
+	_, err := ResolvePullRequest(pr, []string{f.clone})
+	var pe *PullError
+	if !errors.As(err, &pe) {
+		t.Fatalf("err = %v, want *PullError", err)
+	}
+}
+
+func TestResolvePullRequestFailsWhenPRHeadBranchIsAmbiguous(t *testing.T) {
+	f := newPullFixture(t, "claude/per-request-identity", 140)
+	pr := PullRequest{Host: "github.com", Owner: "fabricahq", Repo: "app", Number: 140, URL: "https://github.com/fabricahq/app/pull/140"}
+
+	sha := testutil.Git(t, f.origin, "rev-parse", "refs/heads/"+f.branch)
+	testutil.Git(t, f.origin, "update-ref", "refs/heads/other-copy", sha)
+
+	_, err := ResolvePullRequest(pr, []string{f.clone})
+	var pe *PullError
+	if !errors.As(err, &pe) {
+		t.Fatalf("err = %v, want *PullError", err)
+	}
+}
+
 func TestResolvePullRequestNoLocalRepo(t *testing.T) {
 	f := newPullFixture(t, "claude/per-request-identity", 140)
 	// A PR for a repo no local checkout points at.
