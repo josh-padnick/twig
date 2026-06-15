@@ -15,7 +15,7 @@ Now:
 
 ```sh
 tw matsumoto      # cd's this shell into the worktree, then runs `twig enter`
-tw                # inside a repo: fuzzy-pick a worktree, then cd
+tw                # inside a repo: pick a worktree, then cd
 tw -r fix-login   # flags pass through to resolution (remote pickup here)
 ```
 

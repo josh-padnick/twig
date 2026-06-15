@@ -32,7 +32,10 @@ survives:
 | 5 | stripped fragment is a substring of the basename | dir `my-api-thing/` |
 
 So `api` resolves straight to `feat/api` even when `feat/api-v2` exists,
-with no picker. Several candidates in the same tier open the fuzzy finder.
+with no picker. Several candidates in the same tier open a picker: a headed,
+inline list you drive with the arrow keys (or `j`/`k`), a number key to jump
+straight to a row, `enter` to choose, and `q` to cancel. It renders in place
+rather than taking over the screen, so the list stays in your scrollback.
 
 The stripped fragment is everything after the last `/`: typing
 `claude/foo` matches the same things `foo` does, so full branch names

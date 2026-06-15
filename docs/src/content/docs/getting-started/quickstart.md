@@ -24,13 +24,14 @@ From inside any repo that has worktrees:
 
 ```sh
 twig matsumoto          # opens a new Ghostty window in the matching worktree
-twig                    # no argument: fuzzy-pick among this repo's worktrees
+twig                    # no argument: pick among this repo's worktrees
 twig -t matsumoto       # enter in the current tab instead of a new window
 ```
 
 A fragment can be a full branch (`claude/competent-matsumoto-493452`), a
 branch suffix (`matsumoto`), a directory slug, a hex suffix (`493452`), or a
-literal path. Exact matches win without a picker; ties open a fuzzy finder.
+literal path. Exact matches win without a picker; ties open a quick picker
+(arrow keys or a number to choose).
 
 ## cd instead of opening windows
 

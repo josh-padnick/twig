@@ -63,7 +63,7 @@ eval "$(twig shell-init zsh)"     # ~/.zshrc; bash and fish also supported
 ```sh
 twig init              # interactive first-run setup (roots, openers, shell)
 twig <fragment>        # open the matching worktree (new Ghostty window)
-twig                   # inside a repo: fuzzy-pick among its worktrees
+twig                   # inside a repo: pick among its worktrees
 twig -t <fragment>     # enter in the current tab instead
 twig -r <fragment>     # also search remote branches (Claude Code web, Codex)
 tw <fragment>          # cd in place (via shell-init)

@@ -7,7 +7,8 @@ description: Every twig command and flag.
 
 Bare `twig <fragment>` resolves and opens the worktree with your
 configured [opener set](../guides/openers.md). Bare `twig` inside a repo
-fuzzy-picks among that repo's worktrees; outside one it shows help.
+opens a [picker](../guides/resolution.md#ranking-exact-beats-substring-branches-beat-directories)
+over that repo's worktrees; outside one it shows help.
 
 | Flag | Meaning |
 | --- | --- |

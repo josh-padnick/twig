@@ -63,7 +63,8 @@ func pickupRemote(frag string, noMatchErr error) (resolve.Candidate, error) {
 		return zero, fmt.Errorf("%v; remote branches had no match either", noMatchErr)
 	}
 
-	m, err := pick.OneOf(matches, remote.DisplayMatch)
+	m, err := pick.OneOf(matches, remote.DisplayMatch,
+		fmt.Sprintf("%d remote branches match %q — select one:", len(matches), frag))
 	if err != nil {
 		return zero, err
 	}
